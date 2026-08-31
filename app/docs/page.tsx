@@ -132,19 +132,28 @@ export default function DocsPage() {
           `,
         }}
       />
-    <div className="docs-page docs-layout">
-      {/* Sticky TOC */}
-      <aside className="toc-sidebar" aria-label="Table of Contents">
-            <div className="toc-label">On this page</div>
+    <div className="docs-page docs-layout" style={{ display: "flex", maxWidth: 1200, margin: "0 auto", gap: "3rem", padding: "2rem 24px 100px", alignItems: "start" }}>
+      {/* Left Sidebar */}
+      <aside className="sidebar" aria-label="Table of Contents" style={{ width: 260, flexShrink: 0, position: "sticky", top: 32, height: "fit-content", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         <nav className="toc-links" aria-label="Section links" id="toc-nav">
+          <div className="toc-label">On this page</div>
           <a href="#quick-start" data-section="quick-start">Quick start</a>
-          <a href="#endpoints">Endpoints</a>
-        <a href="#platforms" data-section="platforms">Platforms</a>
-        <a href="#linked-ids" data-section="linked-ids">Linked IDs</a>
-        <a href="#entity-types" data-section="entity-types">Entity types</a>
-        <a href="#rate-limit" data-section="rate-limit">Rate limit &amp; CORS</a>
-        <a href="#service-health" data-section="service-health">Service health</a>
+          <a href="#endpoints" data-section="endpoints">Endpoints</a>
+          <a href="#platforms" data-section="platforms">Platforms</a>
+          <a href="#linked-ids" data-section="linked-ids">Linked IDs</a>
+          <a href="#entity-types" data-section="entity-types">Entity types</a>
+          <a href="#rate-limit" data-section="rate-limit">Rate limit &amp; CORS</a>
+          <a href="#service-health" data-section="service-health">Service health</a>
         </nav>
+        <div style={{ paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.08)", marginTop: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", color: "#6c5ce7", marginBottom: 8 }}>Stats</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 16px", fontSize: 12, color: "var(--text-secondary)" }}>
+            <div><strong style={{ color: "var(--foreground)", fontSize: 16, display: "block" }}>{ENDPOINTS.length}</strong>Endpoints</div>
+            <div><strong style={{ color: "var(--foreground)", fontSize: 16, display: "block" }}>{INPUT_PLATFORMS.length}</strong>Input</div>
+            <div><strong style={{ color: "var(--foreground)", fontSize: 16, display: "block" }}>{OUTPUT_PLATFORMS.length}</strong>Output</div>
+            <div><strong style={{ color: "var(--foreground)", fontSize: 16, display: "block" }}>3</strong>Types</div>
+          </div>
+        </div>
       </aside>
 
       <div className="docs-back">

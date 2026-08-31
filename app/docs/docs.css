@@ -1,14 +1,43 @@
 .docs-page {
   min-height: 100vh;
+  background: var(--background);
+}
+
+/* Main layout shell — prevents overflow / flex blowout */
+.docs-layout {
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 3rem;
+  padding: 2rem 24px 100px;
+  align-items: start;
+}
+
+/* Left sidebar — fixed width, sticky, column flow */
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.sidebar * {
+  position: static;
+}
+.sidebar .toc-label {
+  margin-bottom: 10px;
+}
+.sidebar nav {
+  padding-top: 4px;
+  border-top: 1px solid rgba(255,255,255,0.08);
 }
 
 /* Sticky TOC sidebar */
 .toc-sidebar {
-  position: sticky;
-  top: 24px;
-  float: left;
-  width: 220px;
-  padding-right: 24px;
+  width: 100%;
   font-size: 13px;
   line-height: 1.7;
 }
@@ -34,12 +63,11 @@
   margin-bottom: 10px;
 }
 .docs-layout {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 32px;
-  max-width: 920px;
+  display: flex;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 60px 24px 100px;
+  gap: 3rem;
+  padding: 2rem 24px 100px;
   align-items: start;
 }
 
