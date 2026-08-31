@@ -1,7 +1,7 @@
 "use client";
 
 import { Play } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 interface ResolveResponse {
@@ -45,6 +45,91 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const logoRef = useRef<HTMLHeadingElement>(null);
+  const taglineRef = useRef<HTMLParagraphElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
+  const showcaseRef = useRef<HTMLDivElement>(null);
+  const stepsRef = useRef<HTMLDivElement>(null);
+  const platformsRef = useRef<HTMLDivElement>(null);
+  const artistCardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: "0px",
+      threshold: 0.1,
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          (entry.target as HTMLElement).style.opacity = "1";
+          (entry.target as HTMLElement).style.transform = "translateY(0)";
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    if (logoRef.current) {
+      logoRef.current.style.opacity = "1";
+      logoRef.current.style.transform = "translateY(0)";
+      logoRef.current.style.transition = "none";
+    }
+
+    if (taglineRef.current) {
+      taglineRef.current.style.opacity = "1";
+      taglineRef.current.style.transform = "translateY(0)";
+      taglineRef.current.style.transition = "none";
+    }
+
+    if (formRef.current) {
+      formRef.current.style.opacity = "0";
+      formRef.current.style.transform = "translateY(15px)";
+      setTimeout(() => {
+        formRef.current!.style.opacity = "1";
+        formRef.current!.style.transform = "translateY(0)";
+      }, 300);
+    }
+
+    if (resultRef.current) {
+      resultRef.current.style.opacity = "0";
+      resultRef.current.style.transform = "translateY(15px)";
+      observer.observe(resultRef.current);
+    }
+
+    if (showcaseRef.current) {
+      showcaseRef.current.style.opacity = "0";
+      showcaseRef.current.style.transform = "translateY(15px)";
+      setTimeout(() => observer.observe(showcaseRef.current!), 100);
+    }
+
+    if (stepsRef.current) {
+      stepsRef.current.style.opacity = "0";
+      stepsRef.current.style.transform = "translateY(15px)";
+      setTimeout(() => observer.observe(stepsRef.current!), 150);
+    }
+
+    if (platformsRef.current) {
+      platformsRef.current.style.opacity = "0";
+      platformsRef.current.style.transform = "translateY(15px)";
+      setTimeout(() => observer.observe(platformsRef.current!), 200);
+    }
+
+    artistCardRefs.current.forEach((card, index) => {
+      if (card) {
+        const delay = (index * 100) + 300;
+        card.style.opacity = "0";
+        card.style.transform = "translateY(15px)";
+        card.style.transition = `opacity 0.4s ease-out ${delay}ms, transform 0.4s ease-out ${delay}ms`;
+        setTimeout(() => observer.observe(card!), delay);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -81,10 +166,10 @@ export default function Home() {
   return (
     <main className="home">
       <section className="home-hero">
-        <h1 className="home-logo">Linked</h1>
-        <p className="home-tagline">One link for every music platform</p>
+        <h1 ref={logoRef} className="home-logo">Linked</h1>
+        <p ref={taglineRef} className="home-tagline">One link for every music platform</p>
 
-        <form onSubmit={handleCreate} className="home-form">
+        <form ref={formRef} onSubmit={handleCreate} className="home-form">
           <input
             type="url"
             value={url}
@@ -102,7 +187,7 @@ export default function Home() {
         {error && <div className="home-status error">{error}</div>}
 
         {result && (
-          <div className="home-result">
+          <div ref={resultRef} className="home-result">
             <div className="home-result-preview">
               {result.entity.image && (
                 <img src={result.entity.image} alt="" className="home-result-img" />
@@ -129,7 +214,7 @@ export default function Home() {
         )}
       </section>
 
-      <section className="home-showcase">
+      <section className="home-showcase" ref={showcaseRef}>
         <p className="home-showcase-label">See it in action</p>
         <h2 className="home-showcase-title">Try a linked page</h2>
         <p className="home-showcase-desc">
@@ -137,21 +222,23 @@ export default function Home() {
           supported platform.
         </p>
         <div className="home-showcase-grid">
-          {FEATURED_ARTISTS.map((a) => (
-            <Link
+          {FEATURED_ARTISTS.map((a, index) => (
+            <div
               key={a.linkedId}
-              href={`/artist/${a.linkedId}`}
-              className="home-artist-card"
+              ref={(el) => { artistCardRefs.current[index] = el; }}
+              className="home-artist-card-wrapper"
             >
-              <img src={a.image} alt={a.name} className="home-artist-img" />
-              <div className="home-artist-overlay" />
-              <span className="home-artist-name">{a.name}</span>
-            </Link>
+              <Link href={`/artist/${a.linkedId}`} className="home-artist-card">
+                <img src={a.image} alt={a.name} className="home-artist-img" />
+                <div className="home-artist-overlay" />
+                <span className="home-artist-name">{a.name}</span>
+              </Link>
+            </div>
           ))}
         </div>
       </section>
 
-      <section className="home-steps">
+      <section className="home-steps" ref={stepsRef}>
         <h2 className="home-steps-title">How it works</h2>
         <div className="home-steps-grid">
           <div className="home-step">
@@ -175,7 +262,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="home-platforms">
+      <section className="home-platforms" ref={platformsRef}>
         <h3>Supported platforms</h3>
         <div className="home-platform-icons">
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/spotify.svg" alt="Spotify" />

@@ -9,7 +9,7 @@ export async function GET() {
 
   const services = [
     { name: "Deezer", required: true, result: checks[0] },
-    { name: "iTunes", required: true, result: checks[1] },
+    { name: "Apple Music", required: true, result: checks[1] },
     { name: "Spotify", required: false, result: checks[2] },
     { name: "Tidal", required: false, result: checks[3] },
     { name: "YouTube", required: true, result: checks[4] },
@@ -78,11 +78,26 @@ async function checkiTunes() {
 async function checkSpotify() {
   const start = Date.now();
   const clientId = process.env.SPOTIFY_CLIENT_ID;
-  if (!clientId) {
-    return { ok: false, latencyMs: 0, error: "No SPOTIFY_CLIENT_ID configured" };
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    return { ok: true, latencyMs: Date.now() - start, error: "SPOTIFY_CLIENT_ID/SECRET not configured; Spotify links limited." };
   }
   try {
-    const res = await fetch("https://api.spotify.com/v1/tracks/4cOdK2wGEL8SetjwfNnPKc", {
+    const tokenRes = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+      },
+      body: "grant_type=client_credentials",
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!tokenRes.ok) {
+      return { ok: false, latencyMs: Date.now() - start, error: `token HTTP ${tokenRes.status}` };
+    }
+    const data = await tokenRes.json();
+    const res = await fetch("https://api.spotify.com/v1/tracks/1wNgc05aCdwZHRuC9wMixm", {
+      headers: { Authorization: `Bearer ${data.access_token}` },
       signal: AbortSignal.timeout(5000),
     });
     return { ok: res.ok, latencyMs: Date.now() - start, error: res.ok ? null : `HTTP ${res.status}` };
@@ -93,14 +108,31 @@ async function checkSpotify() {
 
 async function checkTidal() {
   const start = Date.now();
+  const clientId = process.env.TIDAL_CLIENT_ID;
+  const clientSecret = process.env.TIDAL_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    return { ok: true, latencyMs: Date.now() - start, error: "TIDAL_CLIENT_ID/SECRET not configured; Tidal output links disabled." };
+  }
   try {
-    const res = await fetch("https://gqlapi.tidal.com/", {
+    const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+    const tokenRes = await fetch("https://auth.tidal.com/v1/oauth2/token", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: "{ __typename }" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded", Authorization: `Basic ${basic}` },
+      body: "grant_type=client_credentials&scope=tidal.minimal",
       signal: AbortSignal.timeout(5000),
     });
-    return { ok: res.ok, latencyMs: Date.now() - start, error: res.ok ? null : `HTTP ${res.status}` };
+    if (!tokenRes.ok) {
+      return { ok: false, latencyMs: Date.now() - start, error: `token HTTP ${tokenRes.status}` };
+    }
+    const data = await tokenRes.json();
+    if (!data?.access_token) {
+      return { ok: false, latencyMs: Date.now() - start, error: "No access_token returned" };
+    }
+    const res = await fetch("https://openapi.tidal.com/v2/tracks?filter%5Bisrc%5D=USUG11100205&countryCode=US&page%5Bsize%5D=1", {
+      headers: { Authorization: `Bearer ${data.access_token}`, Accept: "application/vnd.api+json" },
+      signal: AbortSignal.timeout(5000),
+    });
+    return { ok: res.ok, latencyMs: Date.now() - start, error: res.ok ? null : `openapi HTTP ${res.status}` };
   } catch (e) {
     return { ok: false, latencyMs: Date.now() - start, error: String(e) };
   }

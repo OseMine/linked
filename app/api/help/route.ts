@@ -68,7 +68,8 @@ export async function GET() {
           parameters: [],
         },
       ],
-      supportedPlatforms: ["Spotify", "Apple Music", "Deezer", "Tidal", "YouTube", "Amazon Music"],
+      inputPlatforms: ["Spotify", "Apple Music", "Deezer", "Tidal", "YouTube", "Amazon Music"],
+      outputPlatforms: ["Spotify", "Apple Music", "Deezer", "Tidal", "YouTube", "YouTube Music", "Amazon Music"],
       supportedEntityTypes: ["song", "album", "artist"],
       rateLimit: "None currently. Fair use appreciated.",
       cors: "Enabled for all origins.",
@@ -83,7 +84,7 @@ export async function GET() {
 function corsHeaders(): Record<string, string> {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 }

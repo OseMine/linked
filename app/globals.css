@@ -319,8 +319,22 @@ html {
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
-  padding: 120px 24px 80px;
+  padding: 60px 24px 80px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 0;
+}
+
+.home-logo {
+  margin-bottom: 12px;
+}
+
+.home-tagline {
+  margin-bottom: 40px;
 }
 
 .home-logo {
@@ -344,10 +358,13 @@ html {
 .home-form {
   display: flex;
   gap: 12px;
+  width: 100%;
+  max-width: 560px;
 }
 
 .home-form input {
   flex: 1;
+  min-width: 320px;
   padding: 16px 20px;
   font-size: 16px;
   background: var(--card-bg);
@@ -519,6 +536,11 @@ html {
   margin: 0 auto 36px;
   max-width: 440px;
   line-height: 1.5;
+}
+
+.home-artist-card-wrapper {
+  opacity: 0;
+  transform: translateY(20px);
 }
 
 .home-showcase-grid {
