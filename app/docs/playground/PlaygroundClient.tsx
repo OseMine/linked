@@ -128,25 +128,28 @@ export function PlaygroundClient() {
   const codeRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    const loadPyodide = async () => {
+    const initPyodide = async () => {
       try {
-        const script = document.createElement("script");
-        script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js";
-        script.onload = async () => {
-          const loadPyodide = (window as unknown as { loadPyodide: (opts: { indexURL: string }) => Promise<unknown> }).loadPyodide;
-          const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/" });
-          await (pyodide as unknown as { loadPackage: (pkg: string) => Promise<void> }).loadPackage("requests");
-          pyodideRef.current = pyodide;
-          setPyodideReady(true);
-        };
-        script.onerror = () => setPyodideError(true);
-        document.head.appendChild(script);
+        const loadPyodide = (window as unknown as { loadPyodide: (opts: { indexURL: string }) => Promise<unknown> }).loadPyodide;
+        const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/" }) as unknown as { loadPackage: (pkg: string) => Promise<void> };
+        await pyodide.loadPackage("requests");
+        pyodideRef.current = pyodide;
+        setPyodideReady(true);
       } catch (e) {
-        console.error("Pyodide failed to load:", e);
         setPyodideError(true);
       }
     };
-    loadPyodide();
+    if ((window as unknown as Record<string, unknown>).loadPyodide) {
+      initPyodide();
+    } else {
+      const interval = setInterval(() => {
+        if ((window as unknown as Record<string, unknown>).loadPyodide) {
+          clearInterval(interval);
+          initPyodide();
+        }
+      }, 200);
+      return () => clearInterval(interval);
+    }
   }, []);
 
   useEffect(() => {

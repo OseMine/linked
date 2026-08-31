@@ -11,9 +11,6 @@ export default function PlaygroundPage() {
   return (
     <div style={{ background: "var(--background)", color: "var(--foreground)", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif", minHeight: "100vh", padding: "60px 24px 100px" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css" />
-        <script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>
-
         <Link href="/docs" style={{ color: "#a1a1a6", textDecoration: "none", fontSize: 14, display: "inline-block", padding: "8px 16px", background: "#161617", border: "1px solid #333", borderRadius: 8, marginBottom: 24 }}>
           ← API Reference
         </Link>
