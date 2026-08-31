@@ -37,23 +37,27 @@ r = requests.post('https://linkedapp.ddns.net/api/resolve', json={
 data = r.json()
 print(data['linkedUrl'])`,
     response: `{
-  "linkedUrl": "https://linkedapp.ddns.net/s/sp-1wNgc05aCdwZHRuC9wMixm",
+  "linkedUrl": "/song/ssp-1wNgc05aCdwZHRuC9wMixm",
+  "linkedId": "ssp-1wNgc05aCdwZHRuC9wMixm",
   "entity": {
-    "type": "song",
-    "id": "sp-1wNgc05aCdwZHRuC9wMixm",
-    "title": "The Less I Know The Better",
+    "name": "The Less I Know The Better",
     "artist": "Tame Impala",
-    "album": "Currents",
-    "isrc": "USQX91500601"
+    "image": "https://i.scdn.co/image/ab67616d0000b273...",
+    "year": 2015,
+    "links": {
+      "spotify": "https://open.spotify.com/track/1wNgc05aCdwZHRuC9wMixm",
+      "apple": "https://music.apple.com/...",
+      "deezer": "https://www.deezer.com/track/...",
+      "tidal": "https://tidal.com/browse/track/...",
+      "youtube": "https://www.youtube.com/watch?v=p3oxS5k4Suo",
+      "youtubemusic": "https://music.youtube.com/watch?v=p3oxS5k4Suo"
+    }
   },
-  "links": {
-    "spotify": "https://open.spotify.com/track/1wNgc05aCdwZHRuC9wMixm",
-    "appleMusic": "https://music.apple.com/track/1440885405",
-    "deezer": "https://www.deezer.com/track/1023921722",
-    "tidal": "https://tidal.com/browse/track/122998414",
-    "youtube": "https://www.youtube.com/watch?v=p3oxS5k4Suo",
-    "youtubeMusic": "https://music.youtube.com/watch?v=p3oxS5k4Suo",
-    "amazonMusic": "https://music.amazon.com/tracks/B00S66QOI6"
+  "source": {
+    "platform": "spotify",
+    "type": "song",
+    "platformId": "1wNgc05aCdwZHRuC9wMixm",
+    "url": "https://open.spotify.com/track/1wNgc05aCdwZHRuC9wMixm"
   }
 }`,
   },

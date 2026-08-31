@@ -17,11 +17,11 @@ r = requests.post("https://linkedapp.ddns.net/api/resolve", json={"url": url})
 data = r.json()
 
 print("Linked URL:", data["linkedUrl"])
-print("Title:", data["entity"]["title"])
+print("Name:", data["entity"]["name"])
 print("Artist:", data["entity"]["artist"])
 print()
-print("All links:")
-for platform, link in data["links"].items():
+print("Cross-platform links:")
+for platform, link in data["entity"]["links"].items():
     print(f"  {platform}: {link}")`,
   },
   {
@@ -34,17 +34,16 @@ for platform, link in data["links"].items():
     defaultCode: `import requests
 
 # Resolve a Linked ID back to full metadata
-type_id = "song/sp-1wNgc05aCdwZHRuC9wMixm"
+type_id = "song/ssp-1wNgc05aCdwZHRuC9wMixm"
 r = requests.get(f"https://linkedapp.ddns.net/api/entity/{type_id}")
-entity = r.json()
+data = r.json()
 
-print(f"Type: {entity['type']}")
-print(f"Title: {entity['title']}")
-print(f"Artist: {entity['artist']}")
-print(f"Album: {entity['album']}")
+print("Linked ID:", data["linkedId"])
+print("Name:", data["entity"]["name"])
+print("Artist:", data["entity"]["artist"])
 print()
 print("Cross-platform links:")
-for platform, link in entity["links"].items():
+for platform, link in data["entity"]["links"].items():
     print(f"  {platform}: {link}")`,
   },
   {
@@ -88,11 +87,11 @@ params = {
 r = requests.get("https://linkedapp.ddns.net/api/search", params=params)
 results = r.json()
 
-print(f"Found {results['total']} result(s)")
+print(f"Found {len(results['results'])} result(s)")
 print()
-for track in results["data"]:
-    print(f"  {track['title']} — {track['artist']['name']}")
-    print(f"  Duration: {track['duration']}s | Album: {track['album']['title']}")
+for track in results["results"]:
+    print(f"  {track['title']} — {track['artist']}")
+    print(f"  Linked ID: {track['linkedId']} | Duration: {track['duration']}s")
     print()`,
   },
   {
@@ -107,13 +106,14 @@ for track in results["data"]:
 r = requests.get("https://linkedapp.ddns.net/api/health")
 health = r.json()
 
-print(f"API Status: {health['status'].upper()}")
+print(f"API Status: {health['status']}")
 print(f"Timestamp: {health['timestamp']}")
 print()
 print("Downstream services:")
-for name, info in health["services"].items():
-    icon = "✓" if info["status"] == "up" else "✗"
-    print(f"  {icon} {name}: {info['status']} ({info['latency_ms']}ms)")`,
+for svc in health["services"]:
+    icon = "ok" if svc["status"] == "ok" else "error"
+    required = "[required]" if svc["required"] else ""
+    print(f"  {icon} {svc['service']} {required} ({svc['latencyMs']}ms)")`,
   },
 ];
 
@@ -130,13 +130,17 @@ export function PlaygroundClient() {
   useEffect(() => {
     const loadPyodide = async () => {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const mod: any = await (window as any).importScripts?.call(window, "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.mjs") || { loadPyodide: (await fetch("https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.mjs").then(r => r.text())).split('loadPyodide')[1] };
-        const load = (globalThis as any).loadPyodide as (opts: { indexURL: string }) => Promise<any>;
-        const pyodide = await load({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/" });
-        await pyodide.loadPackage("requests");
-        pyodideRef.current = pyodide;
-        setPyodideReady(true);
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js";
+        script.onload = async () => {
+          const loadPyodide = (window as unknown as { loadPyodide: (opts: { indexURL: string }) => Promise<unknown> }).loadPyodide;
+          const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/" });
+          await (pyodide as unknown as { loadPackage: (pkg: string) => Promise<void> }).loadPackage("requests");
+          pyodideRef.current = pyodide;
+          setPyodideReady(true);
+        };
+        script.onerror = () => setPyodideError(true);
+        document.head.appendChild(script);
       } catch (e) {
         console.error("Pyodide failed to load:", e);
         setPyodideError(true);
@@ -159,22 +163,27 @@ export function PlaygroundClient() {
     const lines: string[] = [];
 
     try {
-      pyodideRef.current.runPython(`
+      const pyodide = pyodideRef.current as unknown as {
+        runPython: (code: string) => string;
+        runPythonAsync: (code: string) => Promise<void>;
+      };
+      pyodide.runPython(`
 import sys
 from io import StringIO
 sys.stdout = StringIO()
 sys.stderr = StringIO()
 `);
-      await pyodideRef.current.runPythonAsync(code);
-      const stdoutStr = pyodideRef.current.runPython("sys.stdout.getvalue()");
-      const stderrStr = pyodideRef.current.runPython("sys.stderr.getvalue()");
+      await pyodide.runPythonAsync(code);
+      const stdoutStr = pyodide.runPython("sys.stdout.getvalue()");
+      const stderrStr = pyodide.runPython("sys.stderr.getvalue()");
       if (stdoutStr) lines.push(...String(stdoutStr).split("\n").filter(Boolean));
       if (stderrStr) lines.push(...String(stderrStr).split("\n").filter(Boolean));
       if (!stdoutStr && !stderrStr) lines.push("(no output)");
-    } catch (err: any) {
-      lines.push(`Error: ${err.message ?? String(err)}`);
+    } catch (err: unknown) {
+      lines.push(`Error: ${(err as Error).message ?? String(err)}`);
     } finally {
-      pyodideRef.current.runPython(`sys.stdout = sys.__stdout__; sys.stderr = sys.__stderr__`);
+      const pyodide = pyodideRef.current as unknown as { runPython: (code: string) => string };
+      pyodide.runPython(`sys.stdout = sys.__stdout__; sys.stderr = sys.__stderr__`);
     }
     setOutput(lines);
     setIsRunning(false);
