@@ -27,12 +27,12 @@ function formatDuration(seconds: number | null): string {
 }
 
 export default function EntityHero({ data, type }: EntityHeroProps) {
-  const { name, artist, image, links, year, tracks } = data;
+  const { name, artist, image, links, year } = data;
   const imageSrc = image || "/images.svg";
 
-  const action = type === "artist" ? "Follow on" : type === "album" ? "Listen on" : "Play on";
-
-  const platforms = PLATFORMS.filter((p) => (p.aliases?.some((a) => links[a]) || links[p.key]));
+  const typeLabel = type === "artist" ? "Artist" : type === "album" ? "Album" : "Single";
+  const subtitleParts = [artist, type === "album" && year ? String(year) : typeLabel].filter(Boolean);
+  const subtitle = subtitleParts.join(" • ");
 
   const getHref = (p: (typeof PLATFORMS)[number]): string | undefined => {
     if (links[p.key]) return links[p.key];
@@ -40,33 +40,19 @@ export default function EntityHero({ data, type }: EntityHeroProps) {
     return undefined;
   };
 
-  let content;
-  if (type === "artist") {
-    content = (
-      <>
-        <img src={imageSrc} alt={name} className="band-profile-picture" />
+  return (
+    <div className="hero scrollable">
+      <img src={imageSrc} alt={name} className="band-image-big" />
+      <div className="hero-overlay"></div>
+      <div className="hero-content">
+        <img src={imageSrc} alt={name} className="entity-cover" />
         <h2 className="band">{name}</h2>
-      </>
-    );
-  } else if (type === "song") {
-    content = (
-      <>
-        <img src={imageSrc} alt={name} className="song-cover" />
-        <h2 className="band">{name}</h2>
-        <p className="subtitle">{artist} • Single</p>
-      </>
-    );
-  } else {
-    content = (
-      <>
-        <img src={imageSrc} alt={name} className="album-cover" />
-        <h2 className="band">{name}</h2>
-        <p className="subtitle">{artist} • {year || "Album"}</p>
-        {tracks.length > 0 && (
+        {subtitle && <p className="subtitle">{subtitle}</p>}
+        {data.tracks.length > 0 && (
           <section className="tracklist">
             <h3 className="section-title">Tracklist</h3>
             <ol className="tracklist-list">
-              {tracks.map((track, i) => (
+              {data.tracks.map((track, i) => (
                 <li key={i} className="tracklist-item">
                   <span>{track.name}</span>
                   <span className="track-duration">{formatDuration(track.duration)}</span>
@@ -75,28 +61,25 @@ export default function EntityHero({ data, type }: EntityHeroProps) {
             </ol>
           </section>
         )}
-      </>
-    );
-  }
-
-  return (
-    <div className={type === "album" ? "hero scrollable" : "hero"}>
-      <img src={imageSrc} alt={name} className="band-image-big" />
-      <div className="hero-overlay"></div>
-      <div className="hero-content">{content}</div>
-      <div className="platforms">
-        {platforms.map((p) => {
-          const href = getHref(p);
-          if (!href) return null;
-          return (
-            <a key={p.key} className="platform" href={href} target="_blank" rel="noopener">
-              <img src={`https://cdn.jsdelivr.net/npm/simple-icons@9/icons/${p.icon}.svg`} alt="" className="platform-icon" />
-              <span>{action} {p.name}</span>
-            </a>
-          );
-        })}
-      </div>
-      <div className="back-link">
+        <div className="platforms">
+          {PLATFORMS.map((p) => {
+            const href = getHref(p);
+            if (!href) {
+              return (
+                <div key={p.key} className="platform unavailable">
+                  <img src={`https://cdn.jsdelivr.net/npm/simple-icons@9/icons/${p.icon}.svg`} alt="" className="platform-icon" />
+                  <span>Not on {p.name}</span>
+                </div>
+              );
+            }
+            return (
+              <a key={p.key} className="platform" href={href} target="_blank" rel="noopener">
+                <img src={`https://cdn.jsdelivr.net/npm/simple-icons@9/icons/${p.icon}.svg`} alt="" className="platform-icon" />
+                <span>Open on {p.name}</span>
+              </a>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
