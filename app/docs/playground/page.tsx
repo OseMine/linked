@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PlaygroundClient } from "./PlaygroundClient";
+import { PlaygroundDynamic } from "./PlaygroundDynamic";
 
 export const metadata: Metadata = {
   title: "API Playground — Linked",
@@ -21,7 +21,7 @@ export default function PlaygroundPage() {
           Test every endpoint directly in your browser. Write Python, run it, and see live results — powered by PyScript.
         </p>
 
-        <PlaygroundClient />
+        <PlaygroundDynamic />
       </div>
     </div>
   );

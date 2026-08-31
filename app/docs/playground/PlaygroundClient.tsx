@@ -247,15 +247,13 @@ sys.stderr = StringIO()
           </div>
 
           <div style={{ borderTop: "1px solid #333", padding: "10px 16px", display: "flex", alignItems: "center", gap: 10 }}>
-            {!pyodideReady && !pyodideError && (
+            {!pyodideReady && !pyodideError ? (
               <span style={{ fontSize: 12, color: "#a1a1a6" }}>Loading Python runtime...</span>
-            )}
-            {pyodideError && (
+            ) : pyodideError ? (
               <span style={{ fontSize: 12, color: "#ff453a" }}>Python runtime failed to load. Check your internet connection.</span>
-            )}
-            {pyodideReady && (
+            ) : pyodideReady ? (
               <span style={{ fontSize: 12, color: "#00b894" }}>Ready</span>
-            )}
+            ) : null}
             <button
               type="button"
               onClick={runCode}
