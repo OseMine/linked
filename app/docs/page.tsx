@@ -104,7 +104,21 @@ const METHOD_COLORS: Record<string, string> = {
 
 export default function DocsPage() {
   return (
-    <div className="docs-page">
+    <div className="docs-page docs-layout">
+      {/* Sticky TOC */}
+      <aside className="toc-sidebar" aria-label="Table of Contents">
+        <div className="toc-label">On this page</div>
+        <nav className="toc-links" aria-label="Section links">
+          <a href="#quick-start">Quick start</a>
+          <a href="#endpoints">Endpoints</a>
+          <a href="#platforms">Platforms</a>
+          <a href="#linked-ids">Linked IDs</a>
+          <a href="#entity-types">Entity types</a>
+          <a href="#rate-limit">Rate limit &amp; CORS</a>
+          <a href="#service-health">Service health</a>
+        </nav>
+      </aside>
+
       <div className="docs-back">
         <Link href="/">← Back home</Link>
       </div>
@@ -139,8 +153,8 @@ export default function DocsPage() {
 
       <main className="docs-main">
         {/* Quick start */}
-        <section className="docs-section">
-          <h2 className="docs-section-title">Quick start</h2>
+          <section className="docs-section" id="quick-start">
+            <h2 className="docs-section-title">Quick start</h2>
           <div className="docs-code-block">
             <div className="docs-code-lang">bash</div>
             <pre><code>{`# Resolve any music URL
@@ -158,8 +172,8 @@ curl -X POST https://linked.fly.dev/api/resolve \\
         </section>
 
         {/* Endpoints */}
-        <section className="docs-section">
-          <h2 className="docs-section-title">Endpoints</h2>
+        <section className="docs-section" id="endpoints">
+            <h2 className="docs-section-title">Endpoints</h2>
           <div className="docs-endpoints">
             {ENDPOINTS.map((ep) => (
               <div key={ep.path} className="docs-endpoint">
@@ -218,8 +232,8 @@ curl -X POST https://linked.fly.dev/api/resolve \\
         </section>
 
         {/* Platforms */}
-        <section className="docs-section">
-          <h2 className="docs-section-title">Platforms</h2>
+        <section className="docs-section" id="platforms">
+            <h2 className="docs-section-title">Platforms</h2>
           <div className="docs-two-col">
             <div className="docs-card">
               <h3 className="docs-card-title">Input platforms</h3>
@@ -260,8 +274,8 @@ curl -X POST https://linked.fly.dev/api/resolve \\
         </section>
 
         {/* Linked IDs */}
-        <section className="docs-section">
-          <h2 className="docs-section-title">Linked IDs</h2>
+        <section className="docs-section" id="linked-ids">
+            <h2 className="docs-section-title">Linked IDs</h2>
           <p className="docs-text">
             Every entity gets a compact, URL-safe Linked ID. Format: <code>{`{type}{platform}-{id}`}</code>
           </p>
@@ -298,8 +312,8 @@ curl -X POST https://linked.fly.dev/api/resolve \\
         </section>
 
         {/* Entity types */}
-        <section className="docs-section">
-          <h2 className="docs-section-title">Entity types</h2>
+        <section className="docs-section" id="entity-types">
+            <h2 className="docs-section-title">Entity types</h2>
           <div className="docs-entity-types">
             {[
               {
@@ -342,8 +356,8 @@ curl -X POST https://linked.fly.dev/api/resolve \\
         </section>
 
         {/* Rate limit & CORS */}
-        <section className="docs-section">
-          <h2 className="docs-section-title">Rate limit &amp; CORS</h2>
+        <section className="docs-section" id="rate-limit">
+            <h2 className="docs-section-title">Rate limit &amp; CORS</h2>
           <div className="docs-info-grid">
             <div className="docs-info-card">
               <div className="docs-info-icon">⚡</div>
@@ -359,8 +373,8 @@ curl -X POST https://linked.fly.dev/api/resolve \\
         </section>
 
         {/* Health */}
-        <section className="docs-section">
-          <h2 className="docs-section-title">Service health</h2>
+        <section className="docs-section" id="service-health">
+            <h2 className="docs-section-title">Service health</h2>
           <p className="docs-text">
             Check the live health of all downstream services at{" "}
             <code>/api/health</code>. Key services (Deezer, Apple Music, YouTube) are marked required — if any go down the API reports degraded.

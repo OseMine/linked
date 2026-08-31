@@ -1,8 +1,74 @@
 .docs-page {
   min-height: 100vh;
-  max-width: 860px;
+}
+
+/* Sticky TOC sidebar */
+.toc-sidebar {
+  position: sticky;
+  top: 24px;
+  float: left;
+  width: 220px;
+  padding-right: 24px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.toc-sidebar a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  display: block;
+  padding: 2px 0;
+  border-left: 2px solid transparent;
+  padding-left: 8px;
+  transition: all 0.15s ease;
+}
+.toc-sidebar a:hover {
+  color: var(--foreground);
+  border-left-color: #6c5ce7;
+}
+.toc-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #6c5ce7;
+  margin-bottom: 10px;
+}
+.docs-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 32px;
+  max-width: 920px;
   margin: 0 auto;
   padding: 60px 24px 100px;
+}
+@media (max-width: 920px) {
+  .docs-layout {
+    display: block;
+    max-width: 860px;
+  }
+  .toc-sidebar {
+    float: none;
+    width: 100%;
+    padding-right: 0;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .toc-sidebar .toc-links {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .toc-sidebar a {
+    display: inline;
+    border-left: none;
+    padding-left: 0;
+    padding-right: 10px;
+  }
+}
+.toc-links {
+  display: flex;
+  flex-direction: column;
 }
 
 /* Back link */
@@ -288,6 +354,58 @@
 /* Example */
 .docs-example {
   padding: 0 20px 16px;
+}
+
+.docs-id-reference {}
+
+/* Code block header with copy */
+.docs-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+.docs-code-header .docs-code-lang {
+  border-bottom: none;
+  padding: 8px 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  background: none;
+}
+.docs-copy-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.docs-copy-btn:hover {
+  color: var(--foreground);
+  border-color: #555;
+  background: rgba(255, 255, 255, 0.07);
+}
+.docs-copy-btn:active {
+  transform: scale(0.95);
+}
+
+/* Snippets row (language trio) */
+.docs-snippets-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 700px) {
+  .docs-snippets-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Two column layout */
