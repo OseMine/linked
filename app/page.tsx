@@ -276,7 +276,7 @@ export default function Home() {
       </section>
 
       <footer className="home-footer">
-        <Link href="/api/help" className="home-api-link">
+        <Link href="/docs" className="home-api-link">
           API docs &amp; health &rarr;
         </Link>
       </footer>
