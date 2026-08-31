@@ -68,7 +68,7 @@ export async function GET() {
           parameters: [],
         },
       ],
-      supportedPlatforms: ["Spotify", "Apple Music", "Deezer", "Tidal", "YouTube", "SoundCloud", "Amazon Music"],
+      supportedPlatforms: ["Spotify", "Apple Music", "Deezer", "Tidal", "YouTube", "Amazon Music"],
       supportedEntityTypes: ["song", "album", "artist"],
       rateLimit: "None currently. Fair use appreciated.",
       cors: "Enabled for all origins.",

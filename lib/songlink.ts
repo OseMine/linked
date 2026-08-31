@@ -36,11 +36,6 @@ const PLATFORM_URLS: Record<string, Record<string, (id: string) => string>> = {
     artist: (id) => `https://www.youtube.com/channel/${id}`,
     album: (id) => `https://www.youtube.com/playlist?list=${id}`,
   },
-  soundcloud: {
-    artist: (id) => `https://soundcloud.com/${id}`,
-    song: (id) => `https://soundcloud.com/${id}`,
-    album: (id) => `https://soundcloud.com/${id}/sets/${id}`,
-  },
   amazon: {
     artist: (id) => `https://music.amazon.com/artists/${id}`,
     album: (id) => `https://music.amazon.com/albums/${id}`,
@@ -561,7 +556,7 @@ async function resolveSource(
     return entity;
   }
 
-  // Other sources (soundcloud, amazon): source link only (no keyless metadata)
+  // Other sources (amazon): source link only (no keyless metadata)
   return entity;
 }
 

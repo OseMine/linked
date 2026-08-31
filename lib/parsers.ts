@@ -21,7 +21,6 @@ export function parseUrl(url: string): ParsedEntity | null {
     parseDeezer,
     parseTidal,
     parseYouTube,
-    parseSoundCloud,
     parseAmazonMusic,
   ];
 
@@ -122,30 +121,6 @@ function parseYouTube(url: string): Omit<ParsedEntity, "linkedId"> | null {
     platform: "youtube",
     entityType: "song",
     platformId: match[1],
-    url,
-  };
-}
-
-function parseSoundCloud(url: string): Omit<ParsedEntity, "linkedId"> | null {
-  const match = url.match(/soundcloud\.com\/([^/?#]+)(?:\/([^/?#]+))?/i);
-  if (!match) return null;
-
-  const artistName = match[1];
-  const trackName = match[2];
-
-  if (trackName) {
-    return {
-      platform: "soundcloud",
-      entityType: "song",
-      platformId: `${artistName}/${trackName}`,
-      url,
-    };
-  }
-
-  return {
-    platform: "soundcloud",
-    entityType: "artist",
-    platformId: artistName,
     url,
   };
 }

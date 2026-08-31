@@ -15,7 +15,6 @@ const PLATFORMS = [
   { key: "tidal", name: "Tidal", icon: "tidal" },
   { key: "youtube", name: "YouTube", icon: "youtube" },
   { key: "youtubemusic", name: "YouTube Music", icon: "youtubemusic", aliases: ["youtubeMusic"] },
-  { key: "soundcloud", name: "SoundCloud", icon: "soundcloud" },
   { key: "amazonmusic", name: "Amazon Music", icon: "amazon", aliases: ["amazonMusic"] },
 ];
 

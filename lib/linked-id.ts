@@ -4,7 +4,6 @@ const PLATFORM_TO_CODE = {
     deezer:     'dz',
     tidal:      'td',
     youtube:    'yt',
-    soundcloud: 'sc',
     amazon:     'az'
 };
 

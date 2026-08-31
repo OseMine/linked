@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   const parsed = parseUrl(url);
   if (!parsed) {
     return Response.json(
-      { error: "Unsupported URL. Use a link from Spotify, Apple Music, Deezer, Tidal, YouTube, SoundCloud, or Amazon Music." },
+      { error: "Unsupported URL. Use a link from Spotify, Apple Music, Deezer, Tidal, YouTube, or Amazon Music." },
       { status: 422 }
     );
   }

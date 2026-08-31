@@ -1,12 +1,12 @@
 # Linked – Share music across platforms
 
-Linked provides universal music links that resolve to the correct content on any platform (Spotify, Apple Music, Deezer, Tidal, YouTube, SoundCloud, Amazon Music).
+Linked provides universal music links that resolve to the correct content on any platform (Spotify, Apple Music, Deezer, Tidal, YouTube, Amazon Music).
 
 ## Roadmap
 
 - [x] **Keyless Resolution:** Implemented Deezer and iTunes API lookups to resolve metadata and cross-platform links without needing expensive API keys.
 - [x] **ISRC Verteiler:** Implemented an ISRC-based resolution engine for songs to ensure accurate cross-platform linking when ISRCs are available.
-- [x] **YouTube/Tidal Keyless:** Added keyless metadata resolution for YouTube (official oEmbed API) and Tidal (public GraphQL API). Other platforms (SoundCloud, Amazon) remain source-link-only.
+- [x] **YouTube/Tidal Keyless:** Added keyless metadata resolution for YouTube (official oEmbed API) and Tidal (public GraphQL API). Other platforms (Amazon) remain source-link-only.
 - [x] **Tidal & YouTube distribution:** Songs resolved via ISRC now also produce Tidal (credentialed OpenAPI v2 with a keyless GraphQL fallback, when `TIDAL_CLIENT_ID`/`TIDAL_CLIENT_SECRET` are set) and YouTube (keyless title + artist search) links.
 - [x] **Persistent Caching:** Added a persistent caching layer on top of the resolver using Next.js Cache Components (`use cache` + `cacheLife`). Resolved links and metadata are cached server-side (hourly revalidation, daily expiry), and underlying API calls use fetch revalidation, so repeated resolution is fast.
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { Play } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 interface ResolveResponse {
@@ -44,11 +44,6 @@ export default function Home() {
   const [result, setResult] = useState<ResolveResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    document.body.classList.add("scrollable");
-    return () => document.body.classList.remove("scrollable");
-  }, []);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -188,7 +183,6 @@ export default function Home() {
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/deezer.svg" alt="Deezer" />
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/tidal.svg" alt="Tidal" />
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/youtube.svg" alt="YouTube" />
-          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/soundcloud.svg" alt="SoundCloud" />
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/amazonmusic.svg" alt="Amazon Music" />
         </div>
       </section>

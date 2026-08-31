@@ -70,11 +70,6 @@ function buildSourceUrl(platform: string, type: string, platformId: string): str
       artist: (id) => `https://www.youtube.com/channel/${id}`,
       album: (id) => `https://www.youtube.com/playlist?list=${id}`,
     },
-    soundcloud: {
-      artist: (id) => `https://soundcloud.com/${id}`,
-      song: (id) => `https://soundcloud.com/${id}`,
-      album: (id) => `https://soundcloud.com/${id}/sets/${id}`,
-    },
     amazon: {
       artist: (id) => `https://music.amazon.com/artists/${id}`,
       album: (id) => `https://music.amazon.com/albums/${id}`,
