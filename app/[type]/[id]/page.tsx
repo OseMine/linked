@@ -1,9 +1,11 @@
 import { decodeLinkedId } from "@/lib/linked-id";
-import { fetchMusicData } from "@/lib/songlink";
+import { getMusicDataCached } from "@/lib/songlink";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import EntityHero from "@/components/EntityHero";
+
+export const instant = false;
 
 interface PageProps {
   params: Promise<{ type: string; id: string }>;
@@ -18,7 +20,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   try {
-    const data = await fetchMusicData(decoded.platform, decoded.type, decoded.platformId);
+    const data = await getMusicDataCached(decoded.platform, decoded.type, decoded.platformId);
     const title = decoded.type === "artist" ? data.name : `${data.name} - ${data.artist}`;
     return { title: `${title} - Linked` };
   } catch {
@@ -36,7 +38,7 @@ export default async function EntityPage({ params }: PageProps) {
 
   let data;
   try {
-    data = await fetchMusicData(decoded.platform, decoded.type, decoded.platformId);
+    data = await getMusicDataCached(decoded.platform, decoded.type, decoded.platformId);
   } catch (error) {
     console.error('Error fetching music data:', error);
     return (

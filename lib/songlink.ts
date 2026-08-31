@@ -7,6 +7,8 @@ export interface EntityData {
   tracks: { name: string; duration: number | null }[];
 }
 
+import { cacheLife } from "next/cache";
+
 // --- Platform URL builders -------------------------------------------------
 const PLATFORM_URLS: Record<string, Record<string, (id: string) => string>> = {
   spotify: {
@@ -245,6 +247,189 @@ async function spotifySearchTrackByIsrc(isrc: string): Promise<string | null> {
   return track ? `https://open.spotify.com/track/${track.id}` : null;
 }
 
+// --- YouTube (keyless via oEmbed) -----------------------------------------------
+interface YoutubeOembed {
+  title?: string;
+  author_name?: string;
+  thumbnail_url?: string;
+}
+
+async function youtubeOembed(platformId: string): Promise<{ name: string; artist: string | null; image: string | null } | null> {
+  try {
+    const url = `https://www.youtube.com/oembed?url=${encodeURIComponent(buildPlatformUrl("youtube", "song", platformId))}&format=json`;
+    const response = await fetch(url, { next: { revalidate: 3600 } });
+    if (!response.ok) return null;
+    const data: YoutubeOembed = await response.json();
+    return {
+      name: data.title ?? "",
+      artist: data.author_name || null,
+      image: data.thumbnail_url || null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function youtubeSearchTrack(query: string): Promise<string | null> {
+  try {
+    const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+    const response = await fetch(url, {
+      headers: { "Accept-Language": "en-US,en;q=0.9" },
+      next: { revalidate: 3600 },
+    });
+    if (!response.ok) return null;
+    const html = await response.text();
+    const match = html.match(/ytInitialData\s*=\s*(\{.*?\})\s*;\s*(?:<\/script>)?/);
+    if (!match) return null;
+    const data = JSON.parse(match[1]);
+    const contents =
+      data?.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents;
+    if (!contents) return null;
+    for (const section of contents) {
+      const items = section?.itemSectionRenderer?.contents;
+      if (!items) continue;
+      for (const item of items) {
+        const video = item?.videoRenderer;
+        if (video?.videoId && video?.lengthText?.simpleText) {
+          return `https://www.youtube.com/watch?v=${video.videoId}`;
+        }
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// --- Tidal (keyless via public GraphQL API, or credentialed API) ------------------
+interface TidalArtist {
+  id: string;
+  name: string;
+}
+
+interface TidalAlbum {
+  id: string;
+  title: string;
+}
+
+interface TidalTrackGQL {
+  id: string;
+  title: string;
+  duration: number;
+  explicit: boolean;
+  artists?: TidalArtist[];
+  album?: TidalAlbum;
+  image?: { original?: string; large?: string; medium?: string } | null;
+}
+
+let tidalToken: { token: string; expires: number } | null = null;
+
+async function getTidalAccessToken(clientId: string, clientSecret: string): Promise<string | null> {
+  if (tidalToken && tidalToken.expires > Date.now()) return tidalToken.token;
+  try {
+    const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+    const response = await fetch("https://auth.tidal.com/v1/oauth2/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${basic}`,
+      },
+      body: "grant_type=client_credentials&scope=tidal.minimal",
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    tidalToken = {
+      token: data.access_token as string,
+      expires: Date.now() + ((data.expires_in || 86400) - 60) * 1000,
+    };
+    return data.access_token as string;
+  } catch {
+    return null;
+  }
+}
+
+// Tidal track details (used when Tidal is the source).
+async function tidalGetTrack(id: string): Promise<TidalTrackGQL | null> {
+  try {
+    const response = await fetch("https://gqlapi.tidal.com/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+          query ($trackId: BigInt!, $countryCode: String!) {
+            track(id: $trackId, countryCode: $countryCode) {
+              id title duration explicit
+              artists { id name }
+              album { id title }
+              image { original large medium }
+            }
+          }
+        `,
+        variables: { trackId: Number(id), countryCode: "US" },
+      }),
+      next: { revalidate: 3600 },
+    });
+    if (!response.ok) return null;
+    const json = await response.json();
+    return json?.data?.track || null;
+  } catch {
+    return null;
+  }
+}
+
+// Tidal track search by ISRC. Tries the credentialed OpenAPI (v2) first, then the
+// legacy keyless public GraphQL endpoint as a fallback.
+async function tidalSearchTrackByIsrc(isrc: string): Promise<string | null> {
+  return (await tidalSearchTrackByIsrcV2(isrc)) || (await tidalSearchTrackByIsrcGQL(isrc));
+}
+
+async function tidalSearchTrackByIsrcV2(isrc: string): Promise<string | null> {
+  const clientId = process.env.TIDAL_CLIENT_ID;
+  const clientSecret = process.env.TIDAL_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return null;
+  const token = await getTidalAccessToken(clientId, clientSecret);
+  if (!token) return null;
+  try {
+    const response = await fetch(
+      `https://openapi.tidal.com/v2/tracks?filter[isrc]=${encodeURIComponent(isrc)}&countryCode=US&page[size]=1`,
+      { headers: { Authorization: `Bearer ${token}` }, next: { revalidate: 3600 } }
+    );
+    if (!response.ok) return null;
+    const json = await response.json();
+    const node = json?.data?.[0];
+    return node ? `https://tidal.com/browse/track/${node.id}` : null;
+  } catch {
+    return null;
+  }
+}
+
+async function tidalSearchTrackByIsrcGQL(isrc: string): Promise<string | null> {
+  try {
+    const response = await fetch("https://gqlapi.tidal.com/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+          query ($isrc: String!, $countryCode: String!) {
+            tracks(filters: { isrc: [$isrc] }, countryCode: $countryCode, limit: 1) {
+              edges { node { id } }
+            }
+          }
+        `,
+        variables: { isrc, countryCode: "US" },
+      }),
+      next: { revalidate: 3600 },
+    });
+    if (!response.ok) return null;
+    const json = await response.json();
+    const node = json?.data?.tracks?.edges?.[0]?.node;
+    return node ? `https://tidal.com/browse/track/${node.id}` : null;
+  } catch {
+    return null;
+  }
+}
+
 // --- Spotify oEmbed (keyless, metadata only) ------------------------------------
 async function spotifyOembed(platform: string, type: string, id: string): Promise<{ name: string; image: string | null } | null> {
   try {
@@ -349,7 +534,34 @@ async function resolveSource(
     return entity;
   }
 
-  // Other sources (tidal, youtube, soundcloud, amazon): source link only (no keyless metadata)
+  // YouTube source: keyless metadata via oEmbed
+  if (platform === "youtube") {
+    const yt = await youtubeOembed(platformId);
+    if (yt) {
+      entity.name = yt.name;
+      entity.artist = yt.artist;
+      entity.image = yt.image;
+    }
+    return entity;
+  }
+
+  // Tidal source: keyless metadata via public GraphQL API
+  if (platform === "tidal" && type === "song") {
+    const tidal = await tidalGetTrack(platformId);
+    if (tidal) {
+      entity.name = tidal.title;
+      entity.artist = tidal.artists?.[0]?.name || null;
+      entity.image =
+        tidal.image?.original || tidal.image?.large || tidal.image?.medium || null;
+      entity.tracks[0] = { name: tidal.title, duration: tidal.duration };
+      if (tidal.album && entity.links.tidal) {
+        entity.links.tidal = `https://tidal.com/browse/track/${tidal.id}`;
+      }
+    }
+    return entity;
+  }
+
+  // Other sources (soundcloud, amazon): source link only (no keyless metadata)
   return entity;
 }
 
@@ -377,6 +589,23 @@ async function resolveLinksFromIsrc(
   if (sourcePlatform !== "spotify") {
     const spotifyUrl = await spotifySearchTrackByIsrc(isrc);
     if (spotifyUrl) base.links.spotify = spotifyUrl;
+  }
+
+  // Tidal: ISRC lookup via public GraphQL API (keyless)
+  if (sourcePlatform !== "tidal") {
+    const tidalUrl = await tidalSearchTrackByIsrc(isrc);
+    if (tidalUrl) base.links.tidal = tidalUrl;
+  }
+
+  // YouTube: best-effort keyless search by title + artist
+  if (sourcePlatform !== "youtube") {
+    const queryParts: string[] = [];
+    if (base.name && base.name !== "Song") queryParts.push(base.name);
+    if (base.artist) queryParts.push(base.artist);
+    if (queryParts.length) {
+      const ytUrl = await youtubeSearchTrack(`${queryParts.join(" ")} official`);
+      if (ytUrl) base.links.youtube = ytUrl;
+    }
   }
 }
 
@@ -414,4 +643,22 @@ export async function fetchMusicData(
 function stripInternals(entity: ResolvedEntity): EntityData {
   const { isrc, ...rest } = entity;
   return rest;
+}
+
+// --- Persistent caching ------------------------------------------------------
+// Caches resolved links across requests using Next.js Cache Components. The
+// cache key includes the platform/type/id arguments, so each entity is stored
+// separately. Music metadata changes rarely, so refresh it hourly and keep it
+// cached for a day.
+export async function getMusicDataCached(
+  platform: string,
+  type: string,
+  platformId: string
+): Promise<EntityData> {
+  "use cache";
+  cacheLife({
+    revalidate: 3600,
+    expire: 86400,
+  });
+  return fetchMusicData(platform, type, platformId);
 }

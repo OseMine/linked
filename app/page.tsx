@@ -2,33 +2,52 @@
 
 import { Play } from "lucide-react";
 import { useState } from "react";
-import { parseUrl } from "@/lib/parsers";
-import { linkedId } from "@/lib/linked-id";
+
+interface ResolveResponse {
+  entity: {
+    name: string;
+    artist: string | null;
+    image: string | null;
+    links: Record<string, string>;
+  };
+  source: { platform: string; type: string; url: string };
+  linkedUrl: string;
+}
 
 export default function Home() {
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
-  const [result, setResult] = useState<{ linkedUrl: string } | null>(null);
+  const [result, setResult] = useState<ResolveResponse | null>(null);
+  const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  function handleCreate(e: React.FormEvent) {
+  async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
 
     setError("");
     setResult(null);
     setCopied(false);
+    setLoading(true);
 
-    const parsed = parseUrl(url);
+    try {
+      const res = await fetch("/api/resolve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
 
-    if (!parsed) {
-      setError(
-        "Unsupported URL. Please use a link from Spotify, Apple Music, Deezer, Tidal, YouTube, SoundCloud, or Amazon Music."
-      );
-      return;
+      if (!res.ok) {
+        setError(data.error || "Something went wrong. Please try again.");
+        return;
+      }
+
+      setResult(data);
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    const id = linkedId(parsed.platform, parsed.entityType, parsed.platformId);
-    setResult({ linkedUrl: `/${parsed.entityType}/${id}` });
   }
 
   async function copyLink() {
@@ -42,7 +61,7 @@ export default function Home() {
     <main className="create-page">
       <div className="create-content">
         <h1 className="logo">Linked</h1>
-        <p className="tagline">Share music withy anyone</p>
+        <p className="tagline">Share music with anyone</p>
 
         <form onSubmit={handleCreate} className="create-form">
           <input
@@ -53,15 +72,23 @@ export default function Home() {
             required
             autoComplete="off"
           />
-          <button type="submit" aria-label="Create linked URL">
+          <button type="submit" aria-label="Create linked URL" disabled={loading}>
             <Play size={18} />
           </button>
         </form>
 
+        {loading && <div className="loading-message">Resolving link…</div>}
         {error && <div className="error-message">{error}</div>}
 
         {result && (
           <div className="result-content">
+            <div className="preview">
+              {result.entity.image && <img src={result.entity.image} alt="" className="preview-cover" />}
+              <div className="preview-info">
+                <strong>{result.entity.name}</strong>
+                {result.entity.artist && <span>{result.entity.artist}</span>}
+              </div>
+            </div>
             <h3>Your Linked URL</h3>
             <div className="linked-url">
               <input type="text" value={window.location.origin + result.linkedUrl} readOnly />
@@ -87,10 +114,10 @@ export default function Home() {
           <div className="platform-icons">
             <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/spotify.svg" alt="Spotify" className="platform-icon-small" />
             <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/applemusic.svg" alt="Apple Music" className="platform-icon-small" />
-            <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/deezer.svg" alt="Deezer" className="platform-icon-small" />
+            <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/deezer.svg" alt="Deezer" className="platform-icon-small" />
             <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/tidal.svg" alt="Tidal" className="platform-icon-small" />
             <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/youtube.svg" alt="YouTube" className="platform-icon-small" />
-        </div>
+          </div>
         </div>
       </div>
     </main>
