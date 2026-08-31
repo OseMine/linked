@@ -104,18 +104,46 @@ const METHOD_COLORS: Record<string, string> = {
 
 export default function DocsPage() {
   return (
+    <>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              function updateActive() {
+                const sections = document.querySelectorAll('section[id]');
+                const nav = document.getElementById('toc-nav');
+                if (!nav) return;
+                let closest = null;
+                let closestDist = Infinity;
+                sections.forEach(s => {
+                  const rect = s.getBoundingClientRect();
+                  const dist = Math.abs(rect.top - 80);
+                  if (dist < closestDist) { closestDist = dist; closest = s.id; }
+                });
+                nav.querySelectorAll('a').forEach(a => {
+                  const s = a.getAttribute('data-section');
+                  a.classList.toggle('active', s === closest);
+                });
+              }
+              window.addEventListener('scroll', updateActive, { passive: true });
+              window.addEventListener('load', updateActive);
+              updateActive();
+            })();
+          `,
+        }}
+      />
     <div className="docs-page docs-layout">
       {/* Sticky TOC */}
       <aside className="toc-sidebar" aria-label="Table of Contents">
-        <div className="toc-label">On this page</div>
-        <nav className="toc-links" aria-label="Section links">
-          <a href="#quick-start">Quick start</a>
+            <div className="toc-label">On this page</div>
+        <nav className="toc-links" aria-label="Section links" id="toc-nav">
+          <a href="#quick-start" data-section="quick-start">Quick start</a>
           <a href="#endpoints">Endpoints</a>
-          <a href="#platforms">Platforms</a>
-          <a href="#linked-ids">Linked IDs</a>
-          <a href="#entity-types">Entity types</a>
-          <a href="#rate-limit">Rate limit &amp; CORS</a>
-          <a href="#service-health">Service health</a>
+        <a href="#platforms" data-section="platforms">Platforms</a>
+        <a href="#linked-ids" data-section="linked-ids">Linked IDs</a>
+        <a href="#entity-types" data-section="entity-types">Entity types</a>
+        <a href="#rate-limit" data-section="rate-limit">Rate limit &amp; CORS</a>
+        <a href="#service-health" data-section="service-health">Service health</a>
         </nav>
       </aside>
 
@@ -158,7 +186,7 @@ export default function DocsPage() {
           <div className="docs-code-block">
             <div className="docs-code-lang">bash</div>
             <pre><code>{`# Resolve any music URL
-curl -X POST https://linked.fly.dev/api/resolve \\
+curl -X POST https://linkedapp.ddns.net/api/resolve \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://open.spotify.com/track/1wNgc05aCdwZHRuC9wMixm"}'
 
@@ -168,6 +196,21 @@ curl -X POST https://linked.fly.dev/api/resolve \\
   "linkedId": "sp-1wNgc05aCdwZHRuC9wMixm",
   "linkedUrl": "/song/sp-1wNgc05aCdwZHRuC9wMixm"
 }`}</code></pre>
+          </div>
+          <div className="docs-snippets-row">
+            {[
+              { lang: "JavaScript", code: `const res = await fetch('/api/resolve', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ url: 'https://open.spotify.com/track/1wNgc05aCdwZHRuC9wMixm' })\n});\nconst data = await res.json();\nconsole.log(data.linkedUrl);` },
+              { lang: "Python", code: `import requests\nr = requests.post('https://linkedapp.ddns.net/api/resolve', json={\n    'url': 'https://open.spotify.com/track/1wNgc05aCdwZHRuC9wMixm'\n})\nprint(r.json()['linkedUrl'])` },
+              { lang: "curl", code: `curl -X POST https://linkedapp.ddns.net/api/resolve \\\n  -H "Content-Type: application/json" \\\n  -d '{"url": "https://open.spotify.com/track/1wNgc05aCdwZHRuC9wMixm"}'` },
+            ].map((s) => (
+              <div key={s.lang} className="docs-code-block small">
+                <div className="docs-code-header">
+                  <span className="docs-code-lang">{s.lang}</span>
+                  <button className="docs-copy-btn" data-copy={s.code}>Copy</button>
+                </div>
+                <pre><code>{s.code}</code></pre>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -191,7 +234,8 @@ curl -X POST https://linked.fly.dev/api/resolve \\
                 </div>
                 <p className="docs-ep-desc">{ep.description}</p>
                 {ep.parameters && ep.parameters.length > 0 && (
-                  <table className="docs-params">
+                  <div className="docs-table-wrap">
+                    <table className="docs-params">
                     <thead>
                       <tr>
                         <th>Parameter</th>
@@ -216,6 +260,7 @@ curl -X POST https://linked.fly.dev/api/resolve \\
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 )}
                 {ep.example && (
                   <div className="docs-example">
@@ -407,5 +452,6 @@ curl -X POST https://linked.fly.dev/api/resolve \\
         </p>
       </footer>
     </div>
+    </>
   );
 }

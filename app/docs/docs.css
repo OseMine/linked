@@ -40,6 +40,23 @@
   max-width: 920px;
   margin: 0 auto;
   padding: 60px 24px 100px;
+  align-items: start;
+}
+
+/* TOC spacing separation */
+.toc-sidebar .toc-label {
+  margin-bottom: 10px;
+}
+.toc-sidebar nav {
+  padding-top: 4px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-bottom: 4px;
+}
+.toc-sidebar a {
+  display: block;
+  padding: 5px 0;
+  margin-bottom: 2px;
 }
 @media (max-width: 920px) {
   .docs-layout {
@@ -138,23 +155,23 @@
   margin-bottom: 28px;
 }
 .docs-header-stats {
-  display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 16px;
 }
 .docs-stat {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 .docs-stat-value {
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--foreground);
   letter-spacing: -0.5px;
 }
 .docs-stat-label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -358,6 +375,23 @@
 
 .docs-id-reference {}
 
+.docs-code-block small .docs-copy-btn {
+  font-size: 10px;
+  padding: 2px 8px;
+}
+
+/* Active TOC link highlight */
+.toc-sidebar a.active {
+  color: var(--foreground);
+  border-left-color: #6c5ce7;
+  font-weight: 600;
+}
+
+/* Section anchor offset for sticky header */
+section[id] {
+  scroll-margin-top: 24px;
+}
+
 /* Code block header with copy */
 .docs-code-header {
   display: flex;
@@ -414,6 +448,16 @@
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
+.docs-params td,
+.docs-params th {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(51, 51, 54, 0.6);
+}
+
+.docs-params th {
+  border-top: 1px solid rgba(51, 51, 54, 0.6);
+}
+
 @media (max-width: 640px) {
   .docs-two-col {
     grid-template-columns: 1fr;
@@ -705,4 +749,24 @@
 }
 .docs-footer a:hover {
   color: var(--foreground);
+}
+
+/* Table wrapper for scroll */
+.docs-table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 640px) {
+  .docs-layout {
+    padding: 40px 16px 80px;
+  }
+  .docs-section {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+  .toc-sidebar a {
+    padding: 3px 0;
+  }
 }
