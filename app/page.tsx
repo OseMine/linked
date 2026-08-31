@@ -1,7 +1,8 @@
 "use client";
 
 import { Play } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface ResolveResponse {
   entity: {
@@ -14,6 +15,29 @@ interface ResolveResponse {
   linkedUrl: string;
 }
 
+const FEATURED_ARTISTS = [
+  {
+    name: "Falschgeld",
+    linkedId: "asp-4nXKLJPNMpME7ZtV1ClQLc",
+    image: "https://image-cdn-fa.spotifycdn.com/image/ab67616100005174455708c558ded1affc55fd59",
+  },
+  {
+    name: "Kraftklub",
+    linkedId: "asp-0MZ55DwuMQ1B2TXq9lcrE4",
+    image: "https://image-cdn-ak.spotifycdn.com/image/ab67616100005174ba37a104ca04d602889d7415",
+  },
+  {
+    name: "KAFFKIEZ",
+    linkedId: "asp-02RMYgMewVfvyoxyAbegTo",
+    image: "https://image-cdn-fa.spotifycdn.com/image/ab67616100005174657e587dcfc14eaba2374c95",
+  },
+  {
+    name: "Das Lumpenpack",
+    linkedId: "asp-1yoERhqOE1iKKzKELHhEWM",
+    image: "https://image-cdn-fa.spotifycdn.com/image/ab676161000051749e6d2520f7b7fb6e54f40c59",
+  },
+];
+
 export default function Home() {
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
@@ -21,9 +45,13 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    document.body.classList.add("scrollable");
+    return () => document.body.classList.remove("scrollable");
+  }, []);
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-
     setError("");
     setResult(null);
     setCopied(false);
@@ -36,12 +64,10 @@ export default function Home() {
         body: JSON.stringify({ url }),
       });
       const data = await res.json();
-
       if (!res.ok) {
         setError(data.error || "Something went wrong. Please try again.");
         return;
       }
-
       setResult(data);
     } catch {
       setError("Network error. Please try again.");
@@ -58,17 +84,17 @@ export default function Home() {
   }
 
   return (
-    <main className="create-page">
-      <div className="create-content">
-        <h1 className="logo">Linked</h1>
-        <p className="tagline">Share music with anyone</p>
+    <main className="home">
+      <section className="home-hero">
+        <h1 className="home-logo">Linked</h1>
+        <p className="home-tagline">One link for every music platform</p>
 
-        <form onSubmit={handleCreate} className="create-form">
+        <form onSubmit={handleCreate} className="home-form">
           <input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="Paste a music link (Spotify, Apple Music, Deezer, Tidal, YouTube, SoundCloud)"
+            placeholder="Paste a link from Spotify, Apple Music, Deezer, Tidal, YouTube..."
             required
             autoComplete="off"
           />
@@ -77,49 +103,101 @@ export default function Home() {
           </button>
         </form>
 
-        {loading && <div className="loading-message">Resolving link…</div>}
-        {error && <div className="error-message">{error}</div>}
+        {loading && <div className="home-status">Resolving link...</div>}
+        {error && <div className="home-status error">{error}</div>}
 
         {result && (
-          <div className="result-content">
-            <div className="preview">
-              {result.entity.image && <img src={result.entity.image} alt="" className="preview-cover" />}
-              <div className="preview-info">
+          <div className="home-result">
+            <div className="home-result-preview">
+              {result.entity.image && (
+                <img src={result.entity.image} alt="" className="home-result-img" />
+              )}
+              <div className="home-result-info">
                 <strong>{result.entity.name}</strong>
                 {result.entity.artist && <span>{result.entity.artist}</span>}
               </div>
             </div>
-            <h3>Your Linked URL</h3>
-            <div className="linked-url">
-              <input type="text" value={window.location.origin + result.linkedUrl} readOnly />
-              <button onClick={copyLink}>{copied ? "Copied!" : "Copy"}</button>
+            <div className="home-result-url">
+              <input
+                type="text"
+                value={window.location.origin + result.linkedUrl}
+                readOnly
+              />
+              <button onClick={copyLink} type="button">
+                {copied ? "Copied!" : "Copy"}
+              </button>
             </div>
-            <a href={result.linkedUrl} className="view-link">
-              View page →
+            <a href={result.linkedUrl} className="home-result-view">
+              View page &rarr;
             </a>
           </div>
         )}
+      </section>
 
-        <div className="info-section">
-          <h3>How it works</h3>
-          <ol>
-            <li>Copy a share link from your music app</li>
-            <li>Paste it above</li>
-            <li>Get a universal link that works on any platform</li>
-          </ol>
+      <section className="home-showcase">
+        <p className="home-showcase-label">See it in action</p>
+        <h2 className="home-showcase-title">Try a linked page</h2>
+        <p className="home-showcase-desc">
+          Every link resolves to a universal page with options to open on any
+          supported platform.
+        </p>
+        <div className="home-showcase-grid">
+          {FEATURED_ARTISTS.map((a) => (
+            <Link
+              key={a.linkedId}
+              href={`/artist/${a.linkedId}`}
+              className="home-artist-card"
+            >
+              <img src={a.image} alt={a.name} className="home-artist-img" />
+              <div className="home-artist-overlay" />
+              <span className="home-artist-name">{a.name}</span>
+            </Link>
+          ))}
         </div>
+      </section>
 
-        <div className="supported-platforms">
-          <h3>Supported platforms</h3>
-          <div className="platform-icons">
-            <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/spotify.svg" alt="Spotify" className="platform-icon-small" />
-            <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/applemusic.svg" alt="Apple Music" className="platform-icon-small" />
-            <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/deezer.svg" alt="Deezer" className="platform-icon-small" />
-            <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/tidal.svg" alt="Tidal" className="platform-icon-small" />
-            <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/youtube.svg" alt="YouTube" className="platform-icon-small" />
+      <section className="home-steps">
+        <h2 className="home-steps-title">How it works</h2>
+        <div className="home-steps-grid">
+          <div className="home-step">
+            <span className="home-step-num">1</span>
+            <h3>Copy a link</h3>
+            <p>Grab a share URL from your favorite music app.</p>
+          </div>
+          <div className="home-step">
+            <span className="home-step-num">2</span>
+            <h3>Paste it here</h3>
+            <p>Drop it into the input above and hit create.</p>
+          </div>
+          <div className="home-step">
+            <span className="home-step-num">3</span>
+            <h3>Share anywhere</h3>
+            <p>
+              Your new link works on Spotify, Apple Music, Deezer, Tidal,
+              YouTube, and more.
+            </p>
           </div>
         </div>
-      </div>
+      </section>
+
+      <section className="home-platforms">
+        <h3>Supported platforms</h3>
+        <div className="home-platform-icons">
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/spotify.svg" alt="Spotify" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/applemusic.svg" alt="Apple Music" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/deezer.svg" alt="Deezer" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/tidal.svg" alt="Tidal" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/youtube.svg" alt="YouTube" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/soundcloud.svg" alt="SoundCloud" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/amazonmusic.svg" alt="Amazon Music" />
+        </div>
+      </section>
+
+      <footer className="home-footer">
+        <Link href="/api/help" className="home-api-link">
+          API docs &amp; health &rarr;
+        </Link>
+      </footer>
     </main>
   );
 }
