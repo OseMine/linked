@@ -47,7 +47,7 @@ export default function EntityHero({ data, type }: EntityHeroProps) {
         <img src={imageSrc} alt={name} className="entity-cover" />
         <h2 className="band">{name}</h2>
         {subtitle && <p className="subtitle">{subtitle}</p>}
-        {data.tracks.length > 0 && (
+        {type === "album" && data.tracks.length > 0 && (
           <section className="tracklist">
             <h3 className="section-title">Tracklist</h3>
             <ol className="tracklist-list">
@@ -66,7 +66,7 @@ export default function EntityHero({ data, type }: EntityHeroProps) {
             if (!href) {
               return (
                 <div key={p.key} className="platform unavailable">
-                  <img src={`https://cdn.jsdelivr.net/npm/simple-icons@9/icons/${p.icon}.svg`} alt="" className="platform-icon" />
+              <img src={`https://cdn.jsdelivr.net/npm/simple-icons@9/icons/${p.icon === "amazon" ? "amazon" : p.icon}.svg`} alt="" className="platform-icon" />
                   <span>Not on {p.name}</span>
                 </div>
               );

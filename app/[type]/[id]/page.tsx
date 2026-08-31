@@ -22,7 +22,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   try {
     const data = await getMusicDataCached(decoded.platform, decoded.type, decoded.platformId);
     const title = decoded.type === "artist" ? data.name : `${data.name} - ${data.artist}`;
-    return { title: `${title} - Linked` };
+    const canonicalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/${type}/${id}`;
+    return {
+      title: `${title} - Linked`,
+      alternates: {
+        canonical: canonicalUrl,
+      },
+      openGraph: {
+        title: `${title} - Linked`,
+        images: data.image ? [{ url: data.image }] : [],
+      },
+      twitter: {
+        card: 'summary',
+        title: `${title} - Linked`,
+        images: data.image ? [data.image] : [],
+      },
+    };
   } catch {
     return { title: "Linked" };
   }

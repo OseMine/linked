@@ -1,8 +1,20 @@
 "use client";
 
-import { Play } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { Play, Search, X } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+interface SearchResult {
+  title: string;
+  artist: string | null;
+  platform: string;
+  type: "song" | "album" | "artist";
+  platformId: string;
+  linkedId: string;
+  duration: number | null;
+  image: string | null;
+}
 
 interface ResolveResponse {
   entity: {
@@ -39,11 +51,18 @@ const FEATURED_ARTISTS = [
 ];
 
 export default function Home() {
-  const [url, setUrl] = useState("");
+  const router = useRouter();
+  const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [result, setResult] = useState<ResolveResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const logoRef = useRef<HTMLHeadingElement>(null);
   const taglineRef = useRef<HTMLParagraphElement>(null);
@@ -130,8 +149,56 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const fetchSuggestions = useCallback(async (query: string) => {
+    if (!query.trim() || query.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    setSearchLoading(true);
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=8&type=track`);
+      if (res.ok) {
+        const data = await res.json();
+        setSuggestions(data.results || []);
+      }
+    } catch {
+      setSuggestions([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    if (input.length >= 2) {
+      searchTimeoutRef.current = setTimeout(() => {
+        fetchSuggestions(input);
+      }, 300);
+    } else {
+      setSuggestions([]);
+    }
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [input, fetchSuggestions]);
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
+    if (!input.trim()) return;
     setError("");
     setResult(null);
     setCopied(false);
@@ -141,7 +208,7 @@ export default function Home() {
       const res = await fetch("/api/resolve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: input }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -153,6 +220,17 @@ export default function Home() {
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  function handleSuggestionClick(result: SearchResult) {
+    router.push(`/${result.type}/${result.linkedId}`);
+  }
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (suggestions.length > 0) {
+      handleSuggestionClick(suggestions[0]);
     }
   }
 
@@ -169,19 +247,69 @@ export default function Home() {
         <h1 ref={logoRef} className="home-logo">Linked</h1>
         <p ref={taglineRef} className="home-tagline">One link for every music platform</p>
 
-        <form ref={formRef} onSubmit={handleCreate} className="home-form">
-          <input
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="Paste a link from Spotify, Apple Music, Deezer, Tidal, YouTube..."
-            required
-            autoComplete="off"
-          />
-          <button type="submit" aria-label="Create linked URL" disabled={loading}>
-            <Play size={18} />
-          </button>
-        </form>
+        <div className="search-container" ref={searchContainerRef}>
+          <form onSubmit={handleCreate} className="home-search-form">
+            <Search size={18} className="search-icon" />
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              placeholder="Paste a link or search..."
+              autoComplete="off"
+              className="search-input"
+            />
+            {input && (
+              <button
+                type="button"
+                onClick={() => {
+                  setInput("");
+                  setSuggestions([]);
+                  setShowSuggestions(false);
+                }}
+                className="search-clear"
+              >
+                <X size={16} />
+              </button>
+            )}
+            <button type="submit" aria-label="Resolve" disabled={loading} className="search-submit">
+              <Play size={16} />
+            </button>
+          </form>
+
+          {showSuggestions && (suggestions.length > 0 || searchLoading) && (
+            <div className="search-suggestions">
+              {searchLoading ? (
+                <div className="search-suggestion-loading">Searching...</div>
+              ) : (
+                suggestions.map((result, index) => (
+                  <button
+                    key={`${result.platform}:${result.type}:${result.platformId}-${index}`}
+                    className="search-suggestion"
+                    onClick={() => handleSuggestionClick(result)}
+                    type="button"
+                  >
+                    {result.image && (
+                      <img src={result.image} alt="" />
+                    )}
+                    <div className="search-suggestion-info">
+                      <span className="search-suggestion-name">{result.title}</span>
+                      {result.artist && (
+                        <span className="search-suggestion-artist">{result.artist}</span>
+                      )}
+                    </div>
+                    <span className="search-suggestion-type">
+                      {result.platform} • {result.type}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
 
         {loading && <div className="home-status">Resolving link...</div>}
         {error && <div className="home-status error">{error}</div>}
@@ -265,13 +393,13 @@ export default function Home() {
       <section className="home-platforms" ref={platformsRef}>
         <h3>Supported platforms</h3>
         <div className="home-platform-icons">
-          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/spotify.svg" alt="Spotify" />
-          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/applemusic.svg" alt="Apple Music" />
-          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/deezer.svg" alt="Deezer" />
-          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/tidal.svg" alt="Tidal" />
-          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/youtube.svg" alt="YouTube" />
-          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/youtubemusic.svg" alt="YouTube Music" />
-          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/amazonmusic.svg" alt="Amazon Music" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/spotify.svg" alt="Spotify" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/applemusic.svg" alt="Apple Music" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/deezer.svg" alt="Deezer" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/tidal.svg" alt="Tidal" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/youtube.svg" alt="YouTube" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/youtubemusic.svg" alt="YouTube Music" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/amazon.svg" alt="Amazon Music" />
         </div>
       </section>
 

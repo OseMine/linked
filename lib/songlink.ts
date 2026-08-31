@@ -39,7 +39,7 @@ const PLATFORM_URLS: Record<string, Record<string, (id: string) => string>> = {
   amazon: {
     artist: (id) => `https://music.amazon.com/artists/${id}`,
     album: (id) => `https://music.amazon.com/albums/${id}`,
-    song: (id) => `https://music.amazon.com/albums/${id}?trackAsin=${id}`,
+    song: (id) => `https://music.amazon.com/albums/${id}`,
   },
 };
 
@@ -67,7 +67,7 @@ function emptyEntity(platform: string, type: string, platformId: string): Resolv
     image: null,
     year: null,
     links: { [platform]: buildPlatformUrl(platform, type, platformId) },
-    tracks: type === "album" ? [{ name: "Track 1", duration: 180 }] : [],
+    tracks: [],
   };
 }
 
@@ -90,15 +90,6 @@ interface DeezerAlbum {
   original_cover?: string;
   release_date?: string;
   tracks?: { data: { title: string; duration: number }[] };
-}
-
-interface DeezerSearchItem {
-  id: number;
-  title?: string;
-  link: string;
-  type?: string;
-  artist?: { id: number; name: string };
-  album?: { id: number; title: string };
 }
 
 interface DeezerSearchItem {
@@ -218,10 +209,12 @@ async function searchITunesSong(query: string): Promise<string | null> {
 }
 
 // --- Spotify API (needs key via env) ---------------------------------------------
-let spotifyToken: { token: string; expires: number } | null = null;
+const spotifyTokenCache = new Map<string, { token: string; expires: number }>();
 
 async function getSpotifyAccessToken(clientId: string, clientSecret: string): Promise<string | null> {
-  if (spotifyToken && spotifyToken.expires > Date.now()) return spotifyToken.token;
+  const cacheKey = `${clientId}:${clientSecret}`;
+  const cached = getCachedToken(spotifyTokenCache, cacheKey);
+  if (cached) return cached;
   try {
     const body = `grant_type=client_credentials`;
     const response = await fetch("https://accounts.spotify.com/api/token", {
@@ -235,8 +228,9 @@ async function getSpotifyAccessToken(clientId: string, clientSecret: string): Pr
     });
     if (!response.ok) return null;
     const data = await response.json();
-    spotifyToken = { token: data.access_token as string, expires: Date.now() + (data.expires_in || 3600) * 1000 };
-    return data.access_token as string;
+    const token = data.access_token as string;
+    setCachedToken(spotifyTokenCache, cacheKey, token, data.expires_in || 3600);
+    return token;
   } catch {
     return null;
   }
@@ -406,6 +400,19 @@ async function youtubeSearchChannel(query: string): Promise<string | null> {
   return youtubeSearch(query, "channel");
 }
 
+// --- Token cache helpers (serverless-safe) ------------------------------------
+function getCachedToken(cache: Map<string, { token: string; expires: number }>, key: string): string | null {
+  const cached = cache.get(key);
+  if (cached && cached.expires > Date.now()) {
+    return cached.token;
+  }
+  return null;
+}
+
+function setCachedToken(cache: Map<string, { token: string; expires: number }>, key: string, token: string, expiresIn: number) {
+  cache.set(key, { token, expires: Date.now() + (expiresIn - 60) * 1000 });
+}
+
 // --- Tidal (keyless via public GraphQL API, or credentialed API) ------------------
 interface TidalArtist {
   id: string;
@@ -427,10 +434,12 @@ interface TidalTrackGQL {
   image?: { original?: string; large?: string; medium?: string } | null;
 }
 
-let tidalToken: { token: string; expires: number } | null = null;
+const tidalTokenCache = new Map<string, { token: string; expires: number }>();
 
 async function getTidalAccessToken(clientId: string, clientSecret: string): Promise<string | null> {
-  if (tidalToken && tidalToken.expires > Date.now()) return tidalToken.token;
+  const cacheKey = `${clientId}:${clientSecret}`;
+  const cached = getCachedToken(tidalTokenCache, cacheKey);
+  if (cached) return cached;
   try {
     const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
     const response = await fetch("https://auth.tidal.com/v1/oauth2/token", {
@@ -444,11 +453,9 @@ async function getTidalAccessToken(clientId: string, clientSecret: string): Prom
     });
     if (!response.ok) return null;
     const data = await response.json();
-    tidalToken = {
-      token: data.access_token as string,
-      expires: Date.now() + ((data.expires_in || 86400) - 60) * 1000,
-    };
-    return data.access_token as string;
+    const token = data.access_token as string;
+    setCachedToken(tidalTokenCache, cacheKey, token, data.expires_in || 86400);
+    return token;
   } catch {
     return null;
   }
