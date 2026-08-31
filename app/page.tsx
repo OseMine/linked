@@ -270,6 +270,7 @@ export default function Home() {
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/deezer.svg" alt="Deezer" />
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/tidal.svg" alt="Tidal" />
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/youtube.svg" alt="YouTube" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/youtubemusic.svg" alt="YouTube Music" />
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@13/icons/amazonmusic.svg" alt="Amazon Music" />
         </div>
       </section>

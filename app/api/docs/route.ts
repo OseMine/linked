@@ -1,11 +1,30 @@
 const API_VERSION = "1.0.0";
 
+const PLATFORMS = [
+  { key: "spotify", name: "Spotify", icon: "spotify", aliases: [] },
+  { key: "apple", name: "Apple Music", icon: "applemusic", aliases: ["appleMusic"] },
+  { key: "deezer", name: "Deezer", icon: "deezer", aliases: [] },
+  { key: "tidal", name: "Tidal", icon: "tidal", aliases: [] },
+  { key: "youtube", name: "YouTube", icon: "youtube", aliases: [] },
+  { key: "youtubemusic", name: "YouTube Music", icon: "youtubemusic", aliases: ["youtubeMusic"] },
+  { key: "amazonmusic", name: "Amazon Music", icon: "amazon", aliases: ["amazonMusic"] },
+] as const;
+
+interface EndpointDef {
+  method: string;
+  path: string;
+  description: string;
+  parameters?: { name: string; in: string; type: string; required: boolean; description: string }[];
+  example?: { request?: Record<string, unknown>; response?: Record<string, unknown> };
+}
+
 export async function GET() {
   return Response.json(
     {
       name: "Linked API",
       version: API_VERSION,
-      description: "Music link unification API. Paste a link from any supported platform, get a universal 'Linked' URL that works everywhere.",
+      description:
+        "Music link unification API. Paste a link from any supported platform, get a universal 'Linked' URL with cross-platform links.",
       baseUrl: "/api",
       endpoints: [
         {
@@ -16,12 +35,12 @@ export async function GET() {
             { name: "url", in: "body", type: "string", required: true, description: "Music URL from a supported platform." },
           ],
           example: {
-            request: { url: "https://open.spotify.com/track/4cOdK2wGEL8SetjwfNnPKc" },
+            request: { url: "https://open.spotify.com/track/1wNgc05aCdwZHRuC9wMixm" },
             response: {
               entity: "{ name, artist, image, year, links, tracks }",
               source: "{ platform, type, platformId, url }",
-              linkedId: "sp-n5glkt",
-              linkedUrl: "/song/sp-n5glkt",
+              linkedId: "sp-1wNgc05aCdwZHRuC9wMixm",
+              linkedUrl: "/song/sp-1wNgc05aCdwZHRuC9wMixm",
             },
           },
         },
@@ -31,7 +50,7 @@ export async function GET() {
           description: "Resolve a Linked ID back to full metadata with cross-platform links.",
           parameters: [
             { name: "type", in: "path", type: "string", required: true, description: "Entity type: 'song', 'album', or 'artist'." },
-            { name: "id", in: "path", type: "string", required: true, description: "The Linked ID (e.g. 'sp-n5glkt')." },
+            { name: "id", in: "path", type: "string", required: true, description: "The Linked ID (e.g. 'sp-1wNgc05aCdwZHRuC9wMixm')." },
           ],
         },
         {
@@ -43,7 +62,6 @@ export async function GET() {
             { name: "maxwidth", in: "query", type: "number", required: false, description: "Max embed width in pixels (200-1200, default 600)." },
             { name: "theme", in: "query", type: "string", required: false, description: "'light' (default) or 'dark'." },
           ],
-          spec: "https://oembed.com/",
         },
         {
           method: "GET",
@@ -70,12 +88,12 @@ export async function GET() {
         {
           method: "GET",
           path: "/api/docs",
-          description: "Full API reference (same JSON).",
+          description: "Full API reference with platform support, entity types, linked IDs, and endpoint definitions.",
           parameters: [],
         },
       ],
-      inputPlatforms: ["Spotify", "Apple Music", "Deezer", "Tidal", "YouTube", "Amazon Music"],
-      outputPlatforms: ["Spotify", "Apple Music", "Deezer", "Tidal", "YouTube", "YouTube Music", "Amazon Music"],
+      inputPlatforms: PLATFORMS.filter((p) => ["spotify", "apple", "deezer", "tidal", "youtube", "amazonmusic"].includes(p.key as string)).map((p) => p.name),
+      outputPlatforms: PLATFORMS.map((p) => p.name),
       supportedEntityTypes: ["song", "album", "artist"],
       rateLimit: "None currently. Fair use appreciated.",
       cors: "Enabled for all origins.",
