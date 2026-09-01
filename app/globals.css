@@ -159,9 +159,6 @@ html {
   filter: invert(1);
 }
 
-.spotify:hover .platform-icon {
-  glow: 0 0 8px #1db954;
-}
 /* Tracklist */
 .tracklist {
   width: min(500px, 90vw);

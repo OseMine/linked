@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Link href="https://github.com/OseMIne/linked" aria-label="GitHub repository" className="github-link">
+        <Link href="https://github.com/OseMine/linked" aria-label="GitHub repository" className="github-link">
           <FaGithub size={20} />
         </Link>
         {children}

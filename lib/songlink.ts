@@ -168,8 +168,8 @@ async function searchITunes(
   try {
     const term = encodeURIComponent(query);
     const entityParam = entity === "artist" ? "musicArtist" : "album";
-    const attributeParam = entity === "artist" ? "artistTerm" : "albumTerm";
-    const url = `https://itunes.apple.com/search?term=${term}&entity=${entityParam}&attribute=${attributeParam}&limit=5`;
+    const attributeParam = entity === "artist" ? "artistTerm" : undefined;
+    const url = `https://itunes.apple.com/search?term=${term}&entity=${entityParam}${attributeParam ? `&attribute=${attributeParam}` : ""}&limit=5`;
     const response = await fetch(url, { next: { revalidate: 3600 } });
     if (!response.ok) return null;
     const data = await response.json();
@@ -496,8 +496,9 @@ async function tidalGetTrack(id: string): Promise<TidalTrackGQL | null> {
   }
 }
 
-// Tidal track search by ISRC. Tries the credentialed OpenAPI (v2) first, then the
-// legacy keyless public GraphQL endpoint as a fallback.
+// Tidal track search by ISRC via the credentialed OpenAPI (v2).
+// Requires TIDAL_CLIENT_ID / TIDAL_CLIENT_SECRET. Degrades gracefully (returns
+// null) without them.
 async function tidalSearchTrackByIsrc(isrc: string): Promise<string | null> {
   const clientId = process.env.TIDAL_CLIENT_ID;
   const clientSecret = process.env.TIDAL_CLIENT_SECRET;
@@ -604,8 +605,8 @@ async function ytMusicSearch(
 }
 
 // Tidal album/artist search via the credentialed OpenAPI (v2) searchResults
-// endpoint. Requires a TIDAL app granted THIRD_PARTY access tier (search.read).
-// Degrades gracefully (returns null) without it.
+// endpoint. Requires TIDAL_CLIENT_ID / TIDAL_CLIENT_SECRET. Degrades gracefully
+// (returns null) without them.
 async function tidalSearchAlbumArtist(
   query: string,
   type: "album" | "artist"
