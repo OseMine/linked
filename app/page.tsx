@@ -28,30 +28,31 @@ interface ResolveResponse {
 }
 
 const FEATURED_ARTISTS = [
-  {
-    name: "Falschgeld",
-    linkedId: "asp-4nXKLJPNMpME7ZtV1ClQLc",
-    image: "https://image-cdn-fa.spotifycdn.com/image/ab67616100005174455708c558ded1affc55fd59",
-  },
-  {
-    name: "Kraftklub",
-    linkedId: "asp-0MZ55DwuMQ1B2TXq9lcrE4",
-    image: "https://image-cdn-ak.spotifycdn.com/image/ab67616100005174ba37a104ca04d602889d7415",
-  },
-  {
-    name: "KAFFKIEZ",
-    linkedId: "asp-02RMYgMewVfvyoxyAbegTo",
-    image: "https://image-cdn-fa.spotifycdn.com/image/ab67616100005174657e587dcfc14eaba2374c95",
-  },
-  {
-    name: "Das Lumpenpack",
-    linkedId: "asp-1yoERhqOE1iKKzKELHhEWM",
-    image: "https://image-cdn-fa.spotifycdn.com/image/ab676161000051749e6d2520f7b7fb6e54f40c59",
-  },
+  "https://open.spotify.com/artist/4nXKLJPNMpME7ZtV1ClQLc",
+  "https://open.spotify.com/artist/0MZ55DwuMQ1B2TXq9lcrE4",
+  "https://open.spotify.com/artist/02RMYgMewVfvyoxyAbegTo",
+  "https://open.spotify.com/artist/1yoERhqOE1iKKzKELHhEWM",
+  "https://open.spotify.com/artist/6SWVilo40Nph8i52kUuAtI",
+  "https://open.spotify.com/artist/2TiXt00aPsggbxZxL1RaG7",
+  "https://open.spotify.com/artist/432R46LaYsJZV2Gmc4jUV5",
+  "https://open.spotify.com/artist/2jXb8AWz82Sn3RRGOaia7a",
+  "https://open.spotify.com/artist/6Iif8M5PGhQcm5t490OYB6",
+  "https://open.spotify.com/artist/0hLd40hVpRDGENe4KGZLnW",
+  "https://open.spotify.com/artist/3udx0FlpyLF8BmjDVgxYZm",
+  "https://open.spotify.com/artist/66RYRcCpcfJqF3TwqCbUce",
+  "https://open.spotify.com/artist/4NKHTY0ghFbhkFwl29BxMD",
+  "https://open.spotify.com/artist/13XOdftLPuWTn5iH2bUq2B",
 ];
+
+interface FeaturedArtist {
+  name: string;
+  linkedUrl: string;
+  image: string | null;
+}
 
 export default function Home() {
   const router = useRouter();
+  const [featuredArtists, setFeaturedArtists] = useState<FeaturedArtist[]>([]);
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [result, setResult] = useState<ResolveResponse | null>(null);
@@ -72,6 +73,26 @@ export default function Home() {
   const stepsRef = useRef<HTMLDivElement>(null);
   const platformsRef = useRef<HTMLDivElement>(null);
   const artistCardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    async function loadFeaturedArtists() {
+      const selectedUrls = [...FEATURED_ARTISTS]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 4);
+      const response = await fetch("/api/featured-artists", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ urls: selectedUrls }),
+      });
+
+      if (!response.ok) return;
+
+      const data: { artists: FeaturedArtist[] } = await response.json();
+      setFeaturedArtists(data.artists);
+    }
+
+    loadFeaturedArtists();
+  }, []);
 
   useEffect(() => {
     const observerOptions = {
@@ -148,6 +169,31 @@ export default function Home() {
 
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (featuredArtists.length === 0) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          (entry.target as HTMLElement).style.opacity = "1";
+          (entry.target as HTMLElement).style.transform = "translateY(0)";
+        }
+      });
+    }, { threshold: 0.1 });
+
+    artistCardRefs.current.forEach((card, index) => {
+      if (card) {
+        const delay = (index * 100) + 300;
+        card.style.opacity = "0";
+        card.style.transform = "translateY(15px)";
+        card.style.transition = `opacity 0.4s ease-out ${delay}ms, transform 0.4s ease-out ${delay}ms`;
+        observer.observe(card);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, [featuredArtists]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -350,14 +396,14 @@ export default function Home() {
           supported platform.
         </p>
         <div className="home-showcase-grid">
-          {FEATURED_ARTISTS.map((a, index) => (
+          {featuredArtists.map((a, index) => (
             <div
-              key={a.linkedId}
+              key={a.linkedUrl}
               ref={(el) => { artistCardRefs.current[index] = el; }}
               className="home-artist-card-wrapper"
             >
-              <Link href={`/artist/${a.linkedId}`} className="home-artist-card">
-                <img src={a.image} alt={a.name} className="home-artist-img" />
+              <Link href={a.linkedUrl} className="home-artist-card">
+                {a.image && <img src={a.image} alt={a.name} className="home-artist-img" />}
                 <div className="home-artist-overlay" />
                 <span className="home-artist-name">{a.name}</span>
               </Link>

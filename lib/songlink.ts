@@ -953,3 +953,16 @@ export async function getMusicDataCached(
   });
   return fetchMusicData(platform, type, platformId);
 }
+
+export async function getArtistMetadataCached(
+  platform: string,
+  platformId: string,
+): Promise<Pick<EntityData, "name" | "image">> {
+  "use cache";
+  cacheLife({
+    revalidate: 3600,
+    expire: 86400,
+  });
+  const entity = await resolveSource(platform, "artist", platformId);
+  return { name: entity.name, image: entity.image };
+}
