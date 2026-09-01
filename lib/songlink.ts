@@ -619,7 +619,7 @@ async function tidalSearchAlbumArtist(
   try {
     const include = type === "album" ? "albums" : "artists";
     const response = await fetch(
-      `https://openapi.tidal.com/v2/searchResults/${encodeURIComponent(query)}?countryCode=US&include=${include}`,
+      `https://openapi.tidal.com/v2/searchResults?filter[query]=${encodeURIComponent(query)}&countryCode=US&include=${include}`,
       { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.api+json" }, next: { revalidate: 3600 } }
     );
     if (!response.ok) return null;
