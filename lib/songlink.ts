@@ -5,6 +5,14 @@ export interface EntityData {
   year: number | null;
   links: Record<string, string>;
   tracks: { name: string; duration: number | null }[];
+  previewUrl?: string | null;
+  lyrics?: {
+    plainLyrics: string | null;
+    syncedLyrics: string | null;
+    instrumental: boolean;
+  } | null;
+  entityType?: "song" | "album" | "artist" | "podcast" | "audiobook";
+  regionUnavailable?: boolean;
 }
 
 import { cacheLife } from "next/cache";
@@ -41,6 +49,11 @@ const PLATFORM_URLS: Record<string, Record<string, (id: string) => string>> = {
     album: (id) => `https://music.amazon.com/albums/${id}`,
     song: (id) => `https://music.amazon.com/albums/${id}`,
   },
+  bandcamp: {
+    artist: (id) => `https://${id}.bandcamp.com`,
+    album: (id) => `https://${id.replace(/\/album\/[^/]+$/, '').replace(/\//g, '.bandcamp.com/')}`,
+    song: (id) => `https://${id.replace(/\/track\/[^/]+$/, '').replace(/\//g, '.bandcamp.com/')}`,
+  },
 };
 
 function buildPlatformUrl(platform: string, type: string, id: string): string {
@@ -58,16 +71,25 @@ interface ResolvedEntity {
   links: Record<string, string>;
   tracks: { name: string; duration: number | null }[];
   isrc?: string | null;
+  previewUrl?: string | null;
+  lyrics?: {
+    plainLyrics: string | null;
+    syncedLyrics: string | null;
+    instrumental: boolean;
+  } | null;
+  entityType?: "song" | "album" | "artist" | "podcast" | "audiobook";
+  regionUnavailable?: boolean;
 }
 
 function emptyEntity(platform: string, type: string, platformId: string): ResolvedEntity {
   return {
-    name: type === "artist" ? "Artist" : type === "song" ? "Song" : "Album",
+    name: type === "artist" ? "Artist" : type === "song" ? "Song" : type === "album" ? "Album" : type === "podcast" ? "Podcast" : "Audiobook",
     artist: type === "artist" ? null : "Artist",
     image: null,
     year: null,
     links: { [platform]: buildPlatformUrl(platform, type, platformId) },
     tracks: [],
+    entityType: type as ResolvedEntity["entityType"],
   };
 }
 
@@ -254,7 +276,7 @@ async function spGet<T>(path: string): Promise<T | null> {
   }
 }
 
-async function getSpotifyTrack(id: string): Promise<{ isrc: string | null; name: string; artist: string; image: string | null; year: number | null } | null> {
+async function getSpotifyTrack(id: string): Promise<{ isrc: string | null; name: string; artist: string; image: string | null; year: number | null; previewUrl: string | null } | null> {
   const data = await spGet<any>(`/tracks/${id}`);
   if (!data) return null;
   return {
@@ -263,6 +285,7 @@ async function getSpotifyTrack(id: string): Promise<{ isrc: string | null; name:
     artist: data.artists?.[0]?.name || "Unknown",
     image: data.album?.images?.[0]?.url || null,
     year: data.album?.release_date ? new Date(data.album.release_date).getFullYear() : null,
+    previewUrl: data.preview_url || null,
   };
 }
 
@@ -707,6 +730,7 @@ async function resolveSource(
         entity.image = spotify.image;
         entity.year = spotify.year;
         entity.isrc = spotify.isrc;
+        entity.previewUrl = spotify.previewUrl;
         return entity;
       }
     } else if (type === "album") {
@@ -764,7 +788,7 @@ async function resolveSource(
     return entity;
   }
 
-  // Other sources (amazon): source link only (no keyless metadata)
+  // Other sources (amazon, bandcamp): source link only (no keyless metadata)
   return entity;
 }
 
@@ -926,6 +950,28 @@ export async function fetchMusicData(
   // 3. For albums/artists: find links across all supporting platforms
   if (type === "album" || type === "artist") {
     await resolveAlbumArtistLinks(type, platform, entity);
+  }
+
+  // 4. For songs: fetch lyrics (best-effort, non-blocking)
+  if (type === "song" && entity.name !== "Song") {
+    try {
+      const { fetchLyrics } = await import("@/lib/lyrics");
+      const lyricsResult = await fetchLyrics(
+        entity.name,
+        entity.artist || "",
+        undefined,
+        entity.tracks[0]?.duration || undefined
+      );
+      if (lyricsResult) {
+        entity.lyrics = {
+          plainLyrics: lyricsResult.plainLyrics,
+          syncedLyrics: lyricsResult.syncedLyrics,
+          instrumental: lyricsResult.instrumental,
+        };
+      }
+    } catch {
+      // Lyrics fetch failed, continue without
+    }
   }
 
   return stripInternals(entity);

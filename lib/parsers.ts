@@ -1,6 +1,6 @@
 import { linkedId } from "@/lib/linked-id";
 
-export type EntityType = "artist" | "song" | "album";
+export type EntityType = "artist" | "song" | "album" | "podcast" | "audiobook";
 
 export interface ParsedEntity {
   platform: string;
@@ -22,6 +22,7 @@ export function parseUrl(url: string): ParsedEntity | null {
     parseTidal,
     parseYouTube,
     parseAmazonMusic,
+    parseBandcamp,
   ];
 
   for (const parser of parsers) {
@@ -150,6 +151,43 @@ function parseAmazonMusic(url: string): Omit<ParsedEntity, "linkedId"> | null {
   if (artistMatch) {
     return {
       platform: "amazon",
+      entityType: "artist",
+      platformId: artistMatch[1],
+      url,
+    };
+  }
+
+  return null;
+}
+
+function parseBandcamp(url: string): Omit<ParsedEntity, "linkedId"> | null {
+  // Album: artist.bandcamp.com/album/name
+  const albumMatch = url.match(/([a-z0-9-]+)\.bandcamp\.com\/album\/([a-z0-9-]+)/i);
+  if (albumMatch) {
+    return {
+      platform: "bandcamp",
+      entityType: "album",
+      platformId: `${albumMatch[1]}/album/${albumMatch[2]}`,
+      url,
+    };
+  }
+
+  // Track: artist.bandcamp.com/track/name
+  const trackMatch = url.match(/([a-z0-9-]+)\.bandcamp\.com\/track\/([a-z0-9-]+)/i);
+  if (trackMatch) {
+    return {
+      platform: "bandcamp",
+      entityType: "song",
+      platformId: `${trackMatch[1]}/track/${trackMatch[2]}`,
+      url,
+    };
+  }
+
+  // Artist page: artist.bandcamp.com
+  const artistMatch = url.match(/([a-z0-9-]+)\.bandcamp\.com(?:\/)?$/i);
+  if (artistMatch) {
+    return {
+      platform: "bandcamp",
       entityType: "artist",
       platformId: artistMatch[1],
       url,

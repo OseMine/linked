@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Linked - Music Link Unifier",
+  "description": "Automatically detects music platform URLs and redirects to Linked universal pages.",
+  "version": "1.0.0",
+  "permissions": ["activeTab"],
+  "host_permissions": [
+    "https://open.spotify.com/*",
+    "https://music.apple.com/*",
+    "https://www.deezer.com/*",
+    "https://tidal.com/*",
+    "https://www.youtube.com/*",
+    "https://music.amazon.com/*",
+    "https://*.bandcamp.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://open.spotify.com/*",
+        "https://music.apple.com/*",
+        "https://www.deezer.com/*",
+        "https://tidal.com/*",
+        "https://www.youtube.com/*",
+        "https://music.amazon.com/*",
+        "https://*.bandcamp.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

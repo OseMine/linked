@@ -4,6 +4,8 @@ import { Play, Search, X } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useI18n } from "@/lib/i18n";
+import LinkHistory from "@/components/LinkHistory";
 
 interface SearchResult {
   title: string;
@@ -51,6 +53,7 @@ interface FeaturedArtist {
 }
 
 export default function Home() {
+  const { t } = useI18n();
   const router = useRouter();
   const [featuredArtists, setFeaturedArtists] = useState<FeaturedArtist[]>([]);
   const [input, setInput] = useState("");
@@ -290,8 +293,8 @@ export default function Home() {
   return (
     <main className="home">
       <section className="home-hero">
-        <h1 ref={logoRef} className="home-logo">Linked</h1>
-        <p ref={taglineRef} className="home-tagline">One link for every music platform</p>
+        <h1 ref={logoRef} className="home-logo">{t("home.title")}</h1>
+        <p ref={taglineRef} className="home-tagline">{t("home.tagline")}</p>
 
         <div className="search-container" ref={searchContainerRef}>
           <form onSubmit={handleCreate} className="home-search-form">
@@ -304,7 +307,7 @@ export default function Home() {
                 setShowSuggestions(true);
               }}
               onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-              placeholder="Paste a link or search..."
+              placeholder={t("home.search.placeholder")}
               autoComplete="off"
               className="search-input"
             />
@@ -348,7 +351,7 @@ export default function Home() {
                       )}
                     </div>
                     <span className="search-suggestion-type">
-                      {result.platform} • {result.type}
+                      {result.platform} &bull; {result.type}
                     </span>
                   </button>
                 ))
@@ -357,7 +360,7 @@ export default function Home() {
           )}
         </div>
 
-        {loading && <div className="home-status">Resolving link...</div>}
+        {loading && <div className="home-status">{t("home.search.resolving")}</div>}
         {error && <div className="home-status error">{error}</div>}
 
         {result && (
@@ -378,22 +381,23 @@ export default function Home() {
                 readOnly
               />
               <button onClick={copyLink} type="button">
-                {copied ? "Copied!" : "Copy"}
+                {copied ? t("home.result.copied") : t("home.result.copy")}
               </button>
             </div>
             <a href={result.linkedUrl} className="home-result-view">
-              View page &rarr;
+              {t("home.result.view")} &rarr;
             </a>
           </div>
         )}
       </section>
 
+      <LinkHistory />
+
       <section className="home-showcase" ref={showcaseRef}>
-        <p className="home-showcase-label">See it in action</p>
-        <h2 className="home-showcase-title">Try a linked page</h2>
+        <p className="home-showcase-label">{t("home.showcase.label")}</p>
+        <h2 className="home-showcase-title">{t("home.showcase.title")}</h2>
         <p className="home-showcase-desc">
-          Every link resolves to a universal page with options to open on any
-          supported platform.
+          {t("home.showcase.desc")}
         </p>
         <div className="home-showcase-grid">
           {featuredArtists.map((a, index) => (
@@ -413,31 +417,28 @@ export default function Home() {
       </section>
 
       <section className="home-steps" ref={stepsRef}>
-        <h2 className="home-steps-title">How it works</h2>
+        <h2 className="home-steps-title">{t("home.steps.title")}</h2>
         <div className="home-steps-grid">
           <div className="home-step">
             <span className="home-step-num">1</span>
-            <h3>Copy a link</h3>
-            <p>Grab a share URL from your favorite music app.</p>
+            <h3>{t("home.steps.1.title")}</h3>
+            <p>{t("home.steps.1.desc")}</p>
           </div>
           <div className="home-step">
             <span className="home-step-num">2</span>
-            <h3>Paste it here</h3>
-            <p>Drop it into the input above and hit create.</p>
+            <h3>{t("home.steps.2.title")}</h3>
+            <p>{t("home.steps.2.desc")}</p>
           </div>
           <div className="home-step">
             <span className="home-step-num">3</span>
-            <h3>Share anywhere</h3>
-            <p>
-              Your new link works on Spotify, Apple Music, Deezer, Tidal,
-              YouTube, and more.
-            </p>
+            <h3>{t("home.steps.3.title")}</h3>
+            <p>{t("home.steps.3.desc")}</p>
           </div>
         </div>
       </section>
 
       <section className="home-platforms" ref={platformsRef}>
-        <h3>Supported platforms</h3>
+        <h3>{t("home.platforms")}</h3>
         <div className="home-platform-icons">
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/spotify.svg" alt="Spotify" />
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/applemusic.svg" alt="Apple Music" />
@@ -446,12 +447,13 @@ export default function Home() {
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/youtube.svg" alt="YouTube" />
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/youtubemusic.svg" alt="YouTube Music" />
           <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/amazon.svg" alt="Amazon Music" />
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@9/icons/bandcamp.svg" alt="Bandcamp" />
         </div>
       </section>
 
       <footer className="home-footer">
         <Link href="/docs" className="home-api-link">
-          API docs &amp; health &rarr;
+          {t("home.footer.api")} &rarr;
         </Link>
       </footer>
     </main>

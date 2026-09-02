@@ -1,0 +1,19 @@
+{
+  "name": "linked-cli",
+  "version": "1.0.0",
+  "description": "CLI tool for Linked - resolve music links from the terminal",
+  "main": "dist/index.js",
+  "bin": {
+    "linked": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5"
+  },
+  "keywords": ["music", "links", "spotify", "apple-music", "deezer", "linked"],
+  "license": "MIT"
+}

@@ -4,7 +4,8 @@ const PLATFORM_TO_CODE = {
     deezer:     'dz',
     tidal:      'td',
     youtube:    'yt',
-    amazon:     'az'
+    amazon:     'az',
+    bandcamp:   'bc'
 };
 
 const CODE_TO_PLATFORM = Object.fromEntries(
