@@ -9,13 +9,15 @@ export const metadata: Metadata = {
 import "./docs.css";
 import { CodeTabs, EndpointList } from "./DocsClient";
 
-const API_VERSION = "1.0.0";
+const API_VERSION = "1.1.0";
 
 const ENDPOINTS = [
-  { method: "POST", path: "/api/resolve", desc: "Resolve a music URL into a universal Linked URL with cross-platform links.", params: [{ name: "url", type: "string", required: true, desc: "Music URL from a supported platform", in: "body" }], badge: "resolve" },
-  { method: "GET", path: "/api/entity/:type/:id", desc: "Resolve a Linked ID back to full metadata with cross-platform links.", params: [{ name: "type", type: "string", required: true, desc: "Entity type: song, album, or artist", in: "path" }, { name: "id", type: "string", required: true, desc: "Linked ID (e.g. sp-1wNgc05aCdwZHRuC9wMixm)", in: "path" }], badge: "entity" },
+  { method: "POST", path: "/api/resolve", desc: "Resolve a music URL into a universal Linked URL with cross-platform links, lyrics, and previews.", params: [{ name: "url", type: "string", required: true, desc: "Music URL from a supported platform", in: "body" }], badge: "resolve" },
+  { method: "GET", path: "/api/entity/:type/:id", desc: "Resolve a Linked ID back to full metadata with cross-platform links.", params: [{ name: "type", type: "string", required: true, desc: "Entity type: song, album, artist, podcast, or audiobook", in: "path" }, { name: "id", type: "string", required: true, desc: "Linked ID (e.g. sp-1wNgc05aCdwZHRuC9wMixm)", in: "path" }], badge: "entity" },
+  { method: "GET", path: "/api/lyrics", desc: "Fetch lyrics for a track via the keyless Lrclib API.", params: [{ name: "track", type: "string", required: true, desc: "Track name", in: "query" }, { name: "artist", type: "string", required: true, desc: "Artist name", in: "query" }, { name: "album", type: "string", required: false, desc: "Album name (improves match)", in: "query" }, { name: "duration", type: "number", required: false, desc: "Track duration in seconds (improves match)", in: "query" }], badge: "lyrics" },
+  { method: "GET", path: "/api/og", desc: "Generate a dynamic 1200x630 Open Graph share image (SVG) for social cards.", params: [{ name: "title", type: "string", required: true, desc: "Entity title", in: "query" }, { name: "artist", type: "string", required: false, desc: "Artist name", in: "query" }, { name: "image", type: "string", required: false, desc: "Cover art URL", in: "query" }, { name: "theme", type: "string", required: false, desc: "'dark' or 'light'", in: "query" }], badge: "og" },
   { method: "GET", path: "/api/oembed", desc: "oEmbed endpoint for rich previews (Twitter, Discord, Slack).", params: [{ name: "url", type: "string", required: true, desc: "Music URL from a supported platform", in: "query" }, { name: "maxwidth", type: "number", required: false, desc: "Max embed width (200-1200, default 600)", in: "query" }, { name: "theme", type: "string", required: false, desc: "'light' or 'dark'", in: "query" }], badge: "oembed" },
-  { method: "GET", path: "/api/search", desc: "Search for tracks, albums, or artists across platforms via Deezer.", params: [{ name: "q", type: "string", required: true, desc: "Search query", in: "query" }, { name: "type", type: "string", required: false, desc: "track / album / artist", in: "query" }, { name: "limit", type: "number", required: false, desc: "Results (1-25, default 10)", in: "query" }], badge: "search" },
+  { method: "GET", path: "/api/search", desc: "Search for tracks, albums, or artists across platforms (Deezer, Spotify, Apple).", params: [{ name: "q", type: "string", required: true, desc: "Search query", in: "query" }, { name: "type", type: "string", required: false, desc: "track / album / artist", in: "query" }, { name: "limit", type: "number", required: false, desc: "Results (1-25, default 10)", in: "query" }, { name: "sources", type: "string", required: false, desc: "Comma-separated: deezer, spotify, apple", in: "query" }], badge: "search" },
   { method: "GET", path: "/api/health", desc: "Health check for the API and downstream services.", params: [], badge: "health" },
   { method: "GET", path: "/api/docs", desc: "This page. Full API reference.", params: [], badge: "docs" },
 ];
@@ -34,7 +36,7 @@ export default function DocsPage() {
           </div>
           <h1 style={{ fontSize: 36, fontWeight: 700, margin: "0 0 8px", letterSpacing: -1, background: "linear-gradient(135deg, #fff 0%, #a1a1a6 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Linked API</h1>
           <div style={{ fontSize: 14, color: "#a1a1a6", marginBottom: 20, lineHeight: 1.5 }}>One link for every music platform.</div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#a29bfe", background: "rgba(108,92,231,0.15)", padding: "3px 10px", borderRadius: 20, display: "inline-block", marginBottom: 24 }}>v1.0.0</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#a29bfe", background: "rgba(108,92,231,0.15)", padding: "3px 10px", borderRadius: 20, display: "inline-block", marginBottom: 24 }}>v{API_VERSION}</div>
 
           <nav style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8, display: "flex", flexDirection: "column", gap: 2 }} aria-label="Section links">
             {[
@@ -54,9 +56,9 @@ export default function DocsPage() {
 
           <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.08)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 16px", fontSize: 11 }}>
             <div><strong style={{ fontSize: 16, color: "var(--foreground)", display: "block" }}>{ENDPOINTS.length}</strong>Endpoints</div>
-            <div><strong style={{ fontSize: 16, color: "var(--foreground)", display: "block" }}>6</strong>Input</div>
-            <div><strong style={{ fontSize: 16, color: "var(--foreground)", display: "block" }}>7</strong>Output</div>
-            <div><strong style={{ fontSize: 16, color: "var(--foreground)", display: "block" }}>3</strong>Types</div>
+            <div><strong style={{ fontSize: 16, color: "var(--foreground)", display: "block" }}>7</strong>Input</div>
+            <div><strong style={{ fontSize: 16, color: "var(--foreground)", display: "block" }}>8</strong>Output</div>
+            <div><strong style={{ fontSize: 16, color: "var(--foreground)", display: "block" }}>5</strong>Types</div>
           </div>
         </aside>
 
@@ -78,7 +80,7 @@ export default function DocsPage() {
               <div style={{ background: "#161617", border: "1px solid #333", borderRadius: 16, padding: 24 }}>
                 <h3 style={{ fontSize: 16, fontWeight: 700, color: "#f5f5f7", margin: 0, paddingBottom: 8 }}>Input platforms</h3>
                 <p style={{ fontSize: 13, color: "#a1a1a6", margin: "0 0 16px", lineHeight: 1.5 }}>Source URLs accepted by <code>/api/resolve</code>.</p>
-                {["Spotify (sp)", "Apple Music (am)", "Deezer (dz)", "Tidal (td)", "YouTube (yt)", "Amazon Music (az)"].map((line) => (
+                {["Spotify (sp)", "Apple Music (am)", "Deezer (dz)", "Tidal (td)", "YouTube (yt)", "Amazon Music (az)", "Bandcamp (bc)"].map((line) => (
                   <div key={line} style={{ display: "flex", gap: 10, padding: "6px 0", borderBottom: "1px solid rgba(51,51,54,0.4)", alignItems: "center", fontSize: 14, color: "#a1a1a6" }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#6c5ce7", flexShrink: 0 }} />
                     <span style={{ flex: 1 }}>{line}</span>
@@ -88,7 +90,7 @@ export default function DocsPage() {
               <div style={{ background: "#161617", border: "1px solid #333", borderRadius: 16, padding: 24 }}>
                 <h3 style={{ fontSize: 16, fontWeight: 700, color: "#f5f5f7", margin: 0, paddingBottom: 8 }}>Output platforms</h3>
                 <p style={{ fontSize: 13, color: "#a1a1a6", margin: "0 0 16px", lineHeight: 1.5 }}>Cross-link services generated by resolution.</p>
-                {["Spotify", "Apple Music", "Deezer", "Tidal", "YouTube", "YouTube Music (ytm)", "Amazon Music (azm)"].map((line) => (
+                {["Spotify", "Apple Music", "Deezer", "Tidal", "YouTube", "YouTube Music (ytm)", "Amazon Music (azm)", "Bandcamp"].map((line) => (
                   <div key={line} style={{ display: "flex", gap: 10, padding: "6px 0", borderBottom: "1px solid rgba(51,51,54,0.4)", alignItems: "center", fontSize: 14, color: "#a1a1a6" }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#00b894", flexShrink: 0 }} />
                     <span style={{ flex: 1 }}>{line}</span>
@@ -117,7 +119,7 @@ export default function DocsPage() {
               <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, color: "#8a8a9e", marginBottom: 8 }}>Codes</div>
               <div style={{ fontFamily: "monospace", fontSize: 13, lineHeight: 1.7, color: "#cdd6f4" }}>
                 <div style={{ marginBottom: 4 }}><strong style={{ color: "#6c5ce7" }}>Type:</strong> s = song &nbsp; l = album &nbsp; a = artist</div>
-                <div><strong style={{ color: "#00b894" }}>Platform:</strong> sp = Spotify &nbsp; dz = Deezer &nbsp; td = Tidal &nbsp; am = Apple Music &nbsp; yt = YouTube &nbsp; az = Amazon Music &nbsp; ytm = YouTube Music &nbsp; azm = Amazon Music</div>
+                <div><strong style={{ color: "#00b894" }}>Platform:</strong> sp = Spotify &nbsp; dz = Deezer &nbsp; td = Tidal &nbsp; am = Apple Music &nbsp; yt = YouTube &nbsp; az = Amazon Music &nbsp; ytm = YouTube Music &nbsp; azm = Amazon Music &nbsp; bc = Bandcamp</div>
               </div>
             </div>
           </section>
@@ -126,9 +128,10 @@ export default function DocsPage() {
             <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.3, color: "#f5f5f7", margin: "0 0 24px", paddingBottom: 16, borderBottom: "1px solid #333" }}>Entity types</h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
               {[
-                { t: "song", icon: "🎵", desc: "A single track. ISRC is used to cross-resolve links across platforms.", res: "Spotify, Deezer, Apple Music, Tidal, YouTube, YouTube Music, Amazon Music" },
+                { t: "song", icon: "🎵", desc: "A single track. ISRC is used to cross-resolve links across platforms. Includes lyrics + previews.", res: "Spotify, Deezer, Apple Music, Tidal, YouTube, YouTube Music, Amazon Music" },
                 { t: "album", icon: "💿", desc: "An album or EP. Cross-links are resolved by searching album name + artist.", res: "Spotify, Deezer, Apple Music, Tidal*, YouTube, YouTube Music, Amazon Music*" },
                 { t: "artist", icon: "🎤", desc: "An artist profile. Cross-links are resolved by searching the artist name.", res: "Spotify, Deezer, Apple Music, Tidal*, YouTube (channel), YouTube Music, Amazon Music*" },
+                { t: "podcast / audiobook", icon: "🎙️", desc: "Recognized but not cross-linkable. Shows a graceful region-aware fallback.", res: "Not yet supported" },
               ].map((e) => (
                 <div key={e.t} style={{ background: "#161617", border: "1px solid #333", borderRadius: 16, padding: 20 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
@@ -155,7 +158,7 @@ export default function DocsPage() {
               <div style={{ background: "#161617", border: "1px solid #333", borderRadius: 16, padding: 24 }}>
                 <div style={{ fontSize: 24, marginBottom: 12 }}>⚡</div>
                 <h3 style={{ fontSize: 16, fontWeight: 700, color: "#f5f5f7", margin: "0 0 8px" }}>Rate limit</h3>
-                <p style={{ fontSize: 14, color: "#a1a1a6", margin: 0, lineHeight: 1.6 }}>None currently. Fair use appreciated. Services are free and rate limits are generous on all upstream providers.</p>
+                <p style={{ fontSize: 14, color: "#a1a1a6", margin: 0, lineHeight: 1.6 }}>Resolve and search endpoints are limited to <strong>30 requests/minute per IP</strong>. Responses include <code>X-RateLimit-Remaining</code> / <code>X-RateLimit-Reset</code> headers.</p>
               </div>
               <div style={{ background: "#161617", border: "1px solid #333", borderRadius: 16, padding: 24 }}>
                 <div style={{ fontSize: 24, marginBottom: 12 }}>🌐</div>

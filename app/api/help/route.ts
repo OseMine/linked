@@ -1,4 +1,4 @@
-const API_VERSION = "1.0.0";
+const API_VERSION = "1.1.0";
 
 export async function GET() {
   return Response.json(
@@ -18,7 +18,7 @@ export async function GET() {
           example: {
             request: { url: "https://open.spotify.com/track/4cOdK2wGEL8SetjwfNnPKc" },
             response: {
-              entity: "{ name, artist, image, year, links, tracks }",
+              entity: "{ name, artist, image, year, previewUrl, lyrics, links, tracks }",
               source: "{ platform, type, platformId, url }",
               linkedId: "sp-n5glkt",
               linkedUrl: "/song/sp-n5glkt",
@@ -30,8 +30,30 @@ export async function GET() {
           path: "/api/entity/:type/:id",
           description: "Resolve a Linked ID back to full metadata with cross-platform links.",
           parameters: [
-            { name: "type", in: "path", type: "string", required: true, description: "Entity type: 'song', 'album', or 'artist'." },
+            { name: "type", in: "path", type: "string", required: true, description: "Entity type: 'song', 'album', 'artist', 'podcast', or 'audiobook'." },
             { name: "id", in: "path", type: "string", required: true, description: "The Linked ID (e.g. 'sp-n5glkt')." },
+          ],
+        },
+        {
+          method: "GET",
+          path: "/api/lyrics",
+          description: "Fetch lyrics for a track via the keyless Lrclib API.",
+          parameters: [
+            { name: "track", in: "query", type: "string", required: true, description: "Track name." },
+            { name: "artist", in: "query", type: "string", required: true, description: "Artist name." },
+            { name: "album", in: "query", type: "string", required: false, description: "Album name." },
+            { name: "duration", in: "query", type: "number", required: false, description: "Track duration in seconds." },
+          ],
+        },
+        {
+          method: "GET",
+          path: "/api/og",
+          description: "Generate a dynamic 1200x630 Open Graph share image (SVG).",
+          parameters: [
+            { name: "title", in: "query", type: "string", required: true, description: "Entity title." },
+            { name: "artist", in: "query", type: "string", required: false, description: "Artist name." },
+            { name: "image", in: "query", type: "string", required: false, description: "Cover art URL." },
+            { name: "theme", in: "query", type: "string", required: false, description: "'dark' or 'light'." },
           ],
         },
         {
@@ -48,11 +70,12 @@ export async function GET() {
         {
           method: "GET",
           path: "/api/search",
-          description: "Search for tracks, albums, or artists across platforms via Deezer.",
+          description: "Search for tracks, albums, or artists across platforms.",
           parameters: [
             { name: "q", in: "query", type: "string", required: true, description: "Search query (e.g. 'Bohemian Rhapsody')." },
             { name: "type", in: "query", type: "string", required: false, description: "'track' (default), 'album', or 'artist'." },
             { name: "limit", in: "query", type: "number", required: false, description: "Number of results (1-25, default 10)." },
+            { name: "sources", in: "query", type: "string", required: false, description: "Comma-separated subset of 'deezer', 'spotify', 'apple'." },
           ],
         },
         {
@@ -74,13 +97,16 @@ export async function GET() {
           parameters: [],
         },
       ],
-      inputPlatforms: ["Spotify", "Apple Music", "Deezer", "Tidal", "YouTube", "Amazon Music"],
-      outputPlatforms: ["Spotify", "Apple Music", "Deezer", "Tidal", "YouTube", "YouTube Music", "Amazon Music"],
-      supportedEntityTypes: ["song", "album", "artist"],
-      rateLimit: "None currently. Fair use appreciated.",
+      inputPlatforms: ["Spotify", "Apple Music", "Deezer", "Tidal", "YouTube", "Amazon Music", "Bandcamp"],
+      outputPlatforms: ["Spotify", "Apple Music", "Deezer", "Tidal", "YouTube", "YouTube Music", "Amazon Music", "Bandcamp"],
+      supportedEntityTypes: ["song", "album", "artist", "podcast", "audiobook"],
+      contentFeatures: ["lyrics", "audio-previews", "qr-codes", "og-images", "embed-widgets"],
+      rateLimit: "30 req/min for resolve & search endpoints. Fair use appreciated.",
       cors: "Enabled for all origins.",
       roadmap: [
-        "Multi-platform search (not just Deezer)",
+        "Apple Music ISRC lookup",
+        "Playlist support (cross-platform playlists)",
+        "New releases feed",
       ],
     },
     { headers: corsHeaders() }

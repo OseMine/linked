@@ -175,6 +175,79 @@ for track in results['data']:
 }`,
   },
   {
+    id: "lyrics",
+    badge: "lyrics",
+    method: "GET",
+    path: "/api/lyrics",
+    title: "Fetch lyrics",
+    desc: "Get lyrics for any track via the keyless Lrclib API. Returns plain and synced lyrics.",
+    request: {
+      track: "The Less I Know The Better",
+      artist: "Tame Impala",
+      album: "Currents",
+    },
+    curl: `curl "https://linkedapp.ddns.net/api/lyrics?track=The%20Less%20I%20Know%20The%20Better&artist=Tame%20Impala&album=Currents"`,
+    js: `const res = await fetch(
+  '/api/lyrics?track=The%20Less%20I%20Know%20The%20Better&artist=Tame%20Impala&album=Currents'
+);
+const lyrics = await res.json();
+console.log(lyrics.plainLyrics);`,
+    py: `import requests
+params = {
+    'track': 'The Less I Know The Better',
+    'artist': 'Tame Impala',
+    'album': 'Currents'
+}
+r = requests.get('https://linkedapp.ddns.net/api/lyrics', params=params)
+lyrics = r.json()
+print(lyrics['plainLyrics'])`,
+    response: `{
+  "plainLyrics": "She was holding hands with Trevor\\nNot the greatest feeling ever\\nSaid, pull yourself together\\nTry another drink...",
+  "syncedLyrics": "[00:16.92] She was holding hands with Trevor\\n[00:20.04] Not the greatest feeling ever...",
+  "instrumental": false,
+  "source": "lrclib"
+}`,
+  },
+  {
+    id: "og",
+    badge: "og",
+    method: "GET",
+    path: "/api/og",
+    title: "Generate an OG share image",
+    desc: "Create a styled 1200x630 Open Graph image for social sharing (Twitter cards, Discord embeds, WhatsApp).",
+    request: {
+      title: "The Less I Know The Better",
+      artist: "Tame Impala",
+      theme: "dark",
+    },
+    curl: `curl -o card.svg "https://linkedapp.ddns.net/api/og?title=The%20Less%20I%20Know%20The%20Better&artist=Tame%20Impala&theme=dark"`,
+    js: `// Use directly as an image URL in Open Graph meta tags
+const ogImage = '/api/og?title=The%20Less%20I%20Know%20The%20Better&artist=Tame%20Impala';
+
+// <meta property="og:image" content={ogImage} />`,
+    py: `import requests
+params = {
+    'title': 'The Less I Know The Better',
+    'artist': 'Tame Impala',
+    'theme': 'dark'
+}
+r = requests.get('https://linkedapp.ddns.net/api/og', params=params)
+with open('card.svg', 'wb') as f:
+    f.write(r.content)`,
+    response: `<!-- SVG response with Content-Type: image/svg+xml -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" ...
+    <linearGradient id="accent" ...
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <image x="80" y="140" width="300" height="300" rx="24" .../>
+  <text x="440" y="220" font-size="48" font-weight="700">The Less I Know...</text>
+  <rect x="440" y="340" width="200" height="50" rx="25" fill="url(#accent)"/>
+  <text x="540" y="372" font-size="20">Open in Linked</text>
+</svg>`,
+  },
+  {
     id: "health",
     badge: "health",
     method: "GET",
