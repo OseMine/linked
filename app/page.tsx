@@ -79,9 +79,10 @@ export default function Home() {
 
   useEffect(() => {
     async function loadFeaturedArtists() {
+      // Send 8 instead of 4 so transient resolution failures don't leave gaps.
       const selectedUrls = [...FEATURED_ARTISTS]
         .sort(() => Math.random() - 0.5)
-        .slice(0, 4);
+        .slice(0, 8);
       const response = await fetch("/api/featured-artists", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -401,8 +402,8 @@ export default function Home() {
         </p>
         <div className="home-showcase-grid">
           {featuredArtists.map((a, index) => (
-            <div
-              key={a.linkedUrl}
+                <div
+              key={`${a.linkedUrl}-${index}`}
               ref={(el) => { artistCardRefs.current[index] = el; }}
               className="home-artist-card-wrapper"
             >
