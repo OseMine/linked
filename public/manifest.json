@@ -1,7 +1,7 @@
 {
   "name": "Linked",
   "short_name": "Linked",
-  "description": "One link for every music platform",
+  "description": "One link to rule them all",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",

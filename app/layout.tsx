@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Linked - Share Music with anyone",
   description: "Share your favorite music across any platform",
   manifest: "/manifest.json",
+  verification: {
+    google: "p6LRL0t0w8LyGny133yLOLtrhqOPKCb9BEEcSYrmocY",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

@@ -35,7 +35,7 @@ export default function DocsPage() {
             API Reference
           </div>
           <h1 style={{ fontSize: 36, fontWeight: 700, margin: "0 0 8px", letterSpacing: -1, background: "linear-gradient(135deg, #fff 0%, #a1a1a6 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Linked API</h1>
-          <div style={{ fontSize: 14, color: "#a1a1a6", marginBottom: 20, lineHeight: 1.5 }}>One link for every music platform.</div>
+          <div style={{ fontSize: 14, color: "#a1a1a6", marginBottom: 20, lineHeight: 1.5 }}>One link to rule them all.</div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#a29bfe", background: "rgba(108,92,231,0.15)", padding: "3px 10px", borderRadius: 20, display: "inline-block", marginBottom: 24 }}>v{API_VERSION}</div>
 
           <nav style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8, display: "flex", flexDirection: "column", gap: 2 }} aria-label="Section links">

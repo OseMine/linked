@@ -16,7 +16,7 @@ function detectLocale(): Locale {
 const translations: Record<Locale, Record<string, string>> = {
   en: {
     "home.title": "Linked",
-    "home.tagline": "One link for every music platform",
+    "home.tagline": "One link to rule them all",
     "home.search.placeholder": "Paste a link or search...",
     "home.search.resolving": "Resolving link...",
     "home.result.copy": "Copy",
