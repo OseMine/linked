@@ -2,9 +2,39 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PlaygroundDynamic } from "./PlaygroundDynamic";
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://linkedapp.ddns.net";
+
 export const metadata: Metadata = {
-  title: "API Playground — Linked",
-  description: "Test every Linked API endpoint directly in your browser with a live Python playground.",
+  title: "API Playground",
+  description: "Test every Linked API endpoint directly in your browser with a live Python playground. Try resolve, search, lyrics, and more.",
+  alternates: {
+    canonical: `${BASE_URL}/docs/playground`,
+  },
+  openGraph: {
+    title: "API Playground — Linked",
+    description: "Test every Linked API endpoint directly in your browser with a live Python playground.",
+    url: `${BASE_URL}/docs/playground`,
+    siteName: "Linked",
+    type: "website",
+    images: [
+      {
+        url: "/api/og?title=API+Playground&artist=Test+Endpoints+Live",
+        width: 1200,
+        height: 630,
+        alt: "Linked API Playground",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "API Playground — Linked",
+    description: "Test every Linked API endpoint directly in your browser with a live Python playground.",
+    images: ["/api/og?title=API+Playground&artist=Test+Endpoints+Live"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function PlaygroundPage() {

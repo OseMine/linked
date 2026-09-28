@@ -1,9 +1,39 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://linkedapp.ddns.net";
+
 export const metadata: Metadata = {
-  title: "API Reference — Linked",
-  description: "Full API reference for the Linked music link unification service.",
+  title: "API Reference",
+  description: "Full API reference for the Linked music link unification service. Resolve music URLs, get cross-platform links, lyrics, previews, and more.",
+  alternates: {
+    canonical: `${BASE_URL}/docs`,
+  },
+  openGraph: {
+    title: "API Reference — Linked",
+    description: "Full API reference for the Linked music link unification service.",
+    url: `${BASE_URL}/docs`,
+    siteName: "Linked",
+    type: "website",
+    images: [
+      {
+        url: "/api/og?title=API+Reference&artist=Linked+Documentation",
+        width: 1200,
+        height: 630,
+        alt: "Linked API Reference",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "API Reference — Linked",
+    description: "Full API reference for the Linked music link unification service.",
+    images: ["/api/og?title=API+Reference&artist=Linked+Documentation"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 import "./docs.css";

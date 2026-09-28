@@ -2,9 +2,39 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CodeExampleTabsClient } from "./CodeExampleTabsClient";
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://linkedapp.ddns.net";
+
 export const metadata: Metadata = {
-  title: "API Examples — Linked",
-  description: "Working examples for every Linked API endpoint.",
+  title: "API Examples",
+  description: "Working code examples for every Linked API endpoint. Copy and run in cURL, JavaScript, or Python.",
+  alternates: {
+    canonical: `${BASE_URL}/docs/examples`,
+  },
+  openGraph: {
+    title: "API Examples — Linked",
+    description: "Working code examples for every Linked API endpoint. Copy and run in cURL, JavaScript, or Python.",
+    url: `${BASE_URL}/docs/examples`,
+    siteName: "Linked",
+    type: "website",
+    images: [
+      {
+        url: "/api/og?title=API+Examples&artist=Code+Samples",
+        width: 1200,
+        height: 630,
+        alt: "Linked API Examples",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "API Examples — Linked",
+    description: "Working code examples for every Linked API endpoint. Copy and run in cURL, JavaScript, or Python.",
+    images: ["/api/og?title=API+Examples&artist=Code+Samples"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 const EXAMPLES = [
