@@ -16,7 +16,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { type, id } = await params;
-  const decoded = decodeLinkedId(id);
+  const decoded = decodeLinkedId(id, type);
 
   if (!decoded || decoded.type !== type) {
     return {
@@ -164,7 +164,7 @@ function MusicEntityJsonLd({ data, type, id }: { data: any; type: string; id: st
 
 export default async function EntityPage({ params }: PageProps) {
   const { type, id } = await params;
-  const decoded = decodeLinkedId(id);
+  const decoded = decodeLinkedId(id, type);
 
   if (!decoded || decoded.type !== type) {
     notFound();

@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const { type, id } = await params;
 
-  const decoded = decodeLinkedId(id);
+  const decoded = decodeLinkedId(id, type);
   if (!decoded || decoded.type !== type) {
     return Response.json({ error: "Invalid or unknown linked ID." }, { status: 404, headers: corsHeaders() });
   }

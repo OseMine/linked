@@ -40,28 +40,69 @@ export function linkedId(platform: string, type: string, platformId: string): st
     return `${typeCode}${platCode}-${encodedId}`;
 }
 
-export function decodeLinkedId(id: string): { platform: string; type: string; platformId: string } | null {
+export function decodeLinkedId(id: string, routeType?: string): { platform: string; type: string; platformId: string } | null {
     if (!id || typeof id !== 'string') return null;
 
     const sepIndex = id.indexOf('-');
-    if (sepIndex < 3) return null;
+    if (sepIndex < 1) return null;
 
     const prefix = id.slice(0, sepIndex);
     const encodedId = id.slice(sepIndex + 1);
 
-    const typeCode = prefix[0];
-    const platCode = prefix.slice(1);
+    // Empty platformId is invalid
+    if (!encodedId) return null;
 
-    const type = CODE_TO_TYPE[typeCode as keyof typeof CODE_TO_TYPE];
-    const platform = CODE_TO_PLATFORM[platCode as keyof typeof CODE_TO_PLATFORM];
+    // Format 1: Current format - typeCode + platformCode (e.g., "ssp", "sam")
+    if (prefix.length >= 2) {
+        const typeCode = prefix[0];
+        const platCode = prefix.slice(1);
 
-    if (!type || !platform) return null;
+        const type = CODE_TO_TYPE[typeCode as keyof typeof CODE_TO_TYPE];
+        const platform = CODE_TO_PLATFORM[platCode as keyof typeof CODE_TO_PLATFORM];
 
-    return {
-        platform,
-        type,
-        platformId: decodePlatformId(encodedId)
-    };
+        if (type && platform) {
+            return {
+                platform,
+                type,
+                platformId: decodePlatformId(encodedId)
+            };
+        }
+    }
+
+    // Format 2: Legacy format - typeCode + full platform name (e.g., "sspotify", "samazon")
+    if (prefix.length >= 2) {
+        const typeCode = prefix[0];
+        const platformName = prefix.slice(1).toLowerCase();
+
+        const type = CODE_TO_TYPE[typeCode as keyof typeof CODE_TO_TYPE];
+        const platformCode = PLATFORM_TO_CODE[platformName as keyof typeof PLATFORM_TO_CODE];
+
+        if (type && platformCode) {
+            return {
+                platform: platformName,
+                type,
+                platformId: decodePlatformId(encodedId)
+            };
+        }
+    }
+
+    // Format 3: Platform-only format (e.g., "spotify-<id>") - type comes from route
+    const platformName = prefix.toLowerCase();
+    const platformCode = PLATFORM_TO_CODE[platformName as keyof typeof PLATFORM_TO_CODE];
+    
+    if (platformCode && routeType) {
+        // Validate that routeType is a known type
+        const validTypes = ["song", "album", "artist", "podcast", "audiobook"];
+        if (validTypes.includes(routeType)) {
+            return {
+                platform: platformName,
+                type: routeType,
+                platformId: decodePlatformId(encodedId)
+            };
+        }
+    }
+
+    return null;
 }
 
 export function isValidLinkedId(id: string): boolean {

@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const decoded = decodeLinkedId(id);
+  const decoded = decodeLinkedId(id, type || undefined);
   if (!decoded || decoded.type !== type) {
     return new Response("Invalid linked ID", { status: 404 });
   }
